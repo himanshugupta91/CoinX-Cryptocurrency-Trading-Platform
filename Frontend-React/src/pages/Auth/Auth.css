@@ -1,0 +1,34 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Inter", "Poppins", "san-serif";
+}
+
+/* Modern solid background with subtle patterns */
+.authContainer {
+  background: #0f172a;
+  position: relative;
+  height: 100vh;
+  width: 100%;
+}
+
+/* Add subtle grid pattern overlay */
+.authContainer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    linear-gradient(rgba(139, 92, 246, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(139, 92, 246, 0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
+  pointer-events: none;
+}
+
+.bgBlure {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
