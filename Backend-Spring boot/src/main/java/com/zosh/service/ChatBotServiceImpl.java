@@ -24,7 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service
-public class ChatBotServiceImpl implements ChatBotService{
+public class ChatBotServiceImpl implements ChatBotService {
 
     @Value("${gemini.api.key}")
     private String API_KEY;
@@ -42,52 +42,52 @@ public class ChatBotServiceImpl implements ChatBotService{
     }
 
     public CoinDTO makeApiRequest(String currencyName) {
-        System.out.println("coin name "+currencyName);
-        String url = "https://api.coingecko.com/api/v3/coins/"+currencyName.toLowerCase();
+        System.out.println("coin name " + currencyName);
+        String url = "https://api.coingecko.com/api/v3/coins/" + currencyName.toLowerCase();
 
         RestTemplate restTemplate = new RestTemplate();
 
-            HttpHeaders headers = new HttpHeaders();
+        HttpHeaders headers = new HttpHeaders();
 
+        HttpEntity<String> entity = new HttpEntity<>("parameters", headers);
 
-            HttpEntity<String> entity = new HttpEntity<>("parameters", headers);
+        ResponseEntity<Map> responseEntity = restTemplate.getForEntity(url, Map.class);
+        Map<String, Object> responseBody = responseEntity.getBody();
+        if (responseBody != null) {
+            Map<String, Object> image = (Map<String, Object>) responseBody.get("image");
 
-            ResponseEntity<Map> responseEntity = restTemplate.getForEntity(url, Map.class);
-            Map<String, Object> responseBody = responseEntity.getBody();
-            if (responseBody != null) {
-                Map<String, Object> image = (Map<String, Object>) responseBody.get("image");
+            Map<String, Object> marketData = (Map<String, Object>) responseBody.get("market_data");
 
-                Map<String, Object> marketData = (Map<String, Object>) responseBody.get("market_data");
+            CoinDTO coinInfo = new CoinDTO();
+            coinInfo.setId((String) responseBody.get("id"));
+            coinInfo.setSymbol((String) responseBody.get("symbol"));
+            coinInfo.setName((String) responseBody.get("name"));
+            coinInfo.setImage((String) image.get("large"));
 
-                CoinDTO coinInfo = new CoinDTO();
-                coinInfo.setId((String) responseBody.get("id"));
-                coinInfo.setSymbol((String) responseBody.get("symbol"));
-                coinInfo.setName((String) responseBody.get("name"));
-                coinInfo.setImage((String) image.get("large"));
+            coinInfo.setCurrentPrice(
+                    convertToDouble(((Map<String, Object>) marketData.get("current_price")).get("usd")));
+            coinInfo.setMarketCap(convertToDouble(((Map<String, Object>) marketData.get("market_cap")).get("usd")));
+            coinInfo.setMarketCapRank((int) responseBody.get("market_cap_rank"));
+            coinInfo.setTotalVolume(convertToDouble(((Map<String, Object>) marketData.get("total_volume")).get("usd")));
+            coinInfo.setHigh24h(convertToDouble(((Map<String, Object>) marketData.get("high_24h")).get("usd")));
+            coinInfo.setLow24h(convertToDouble(((Map<String, Object>) marketData.get("low_24h")).get("usd")));
+            coinInfo.setPriceChange24h(convertToDouble(marketData.get("price_change_24h")));
+            coinInfo.setPriceChangePercentage24h(convertToDouble(marketData.get("price_change_percentage_24h")));
+            coinInfo.setMarketCapChange24h(convertToDouble(marketData.get("market_cap_change_24h")));
+            coinInfo.setMarketCapChangePercentage24h(
+                    convertToDouble(marketData.get("market_cap_change_percentage_24h")));
+            coinInfo.setCirculatingSupply(convertToDouble(marketData.get("circulating_supply")));
+            coinInfo.setTotalSupply(convertToDouble(marketData.get("total_supply")));
 
-                coinInfo.setCurrentPrice(convertToDouble(((Map<String, Object>) marketData.get("current_price")).get("usd")));
-                coinInfo.setMarketCap(convertToDouble(((Map<String, Object>) marketData.get("market_cap")).get("usd")));
-                coinInfo.setMarketCapRank((int) responseBody.get("market_cap_rank"));
-                coinInfo.setTotalVolume(convertToDouble(((Map<String, Object>) marketData.get("total_volume")).get("usd")));
-                coinInfo.setHigh24h(convertToDouble(((Map<String, Object>) marketData.get("high_24h")).get("usd")));
-                coinInfo.setLow24h(convertToDouble(((Map<String, Object>) marketData.get("low_24h")).get("usd")));
-                coinInfo.setPriceChange24h(convertToDouble(marketData.get("price_change_24h")) );
-                coinInfo.setPriceChangePercentage24h(convertToDouble(marketData.get("price_change_percentage_24h")));
-                coinInfo.setMarketCapChange24h(convertToDouble(marketData.get("market_cap_change_24h")));
-                coinInfo.setMarketCapChangePercentage24h(convertToDouble( marketData.get("market_cap_change_percentage_24h")));
-                coinInfo.setCirculatingSupply(convertToDouble(marketData.get("circulating_supply")));
-                coinInfo.setTotalSupply(convertToDouble(marketData.get("total_supply")));
+            return coinInfo;
 
-                return coinInfo;
-
-             }
-       return null;
+        }
+        return null;
     }
 
-
-
-    public FunctionResponse getFunctionResponse(String prompt){
-        String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" + API_KEY;
+    public FunctionResponse getFunctionResponse(String prompt) {
+        String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key="
+                + API_KEY;
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -117,7 +117,8 @@ public class ChatBotServiceImpl implements ChatBotService{
                 "              },\n" +
                 "              \"currencyData\": {\n" +
                 "                \"type\": \"STRING\",\n" +
-                "                \"description\": \"Currency Data id, symbol, name, image, current_price, market_cap, market_cap_rank, fully_diluted_valuation, total_volume, high_24h, low_24h, price_change_24h, price_change_percentage_24h, market_cap_change_24h, market_cap_change_percentage_24h, circulating_supply, total_supply, max_supply, ath, ath_change_percentage, ath_date, atl, atl_change_percentage, atl_date, last_updated.\"\n" +
+                "                \"description\": \"Currency Data id, symbol, name, image, current_price, market_cap, market_cap_rank, fully_diluted_valuation, total_volume, high_24h, low_24h, price_change_24h, price_change_percentage_24h, market_cap_change_24h, market_cap_change_percentage_24h, circulating_supply, total_supply, max_supply, ath, ath_change_percentage, ath_date, atl, atl_change_percentage, atl_date, last_updated.\"\n"
+                +
                 "              }\n" +
                 "            },\n" +
                 "            \"required\": [\"currencyName\", \"currencyData\"]\n" +
@@ -134,7 +135,6 @@ public class ChatBotServiceImpl implements ChatBotService{
         RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<String> response = restTemplate.postForEntity(GEMINI_API_URL, requestEntity, String.class);
 
-
         String responseBody = response.getBody();
 
         ReadContext ctx = JsonPath.parse(responseBody);
@@ -145,145 +145,140 @@ public class ChatBotServiceImpl implements ChatBotService{
         String name = ctx.read("$.candidates[0].content.parts[0].functionCall.name");
 
         // Print the extracted values
-        FunctionResponse res=new FunctionResponse();
+        FunctionResponse res = new FunctionResponse();
         res.setCurrencyName(currencyName);
         res.setCurrencyData(currencyData);
         res.setFunctionName(name);
 
-        System.out.println(name +" ------- "+currencyName+"-----"+currencyData);
+        System.out.println(name + " ------- " + currencyName + "-----" + currencyData);
 
         return res;
     }
 
-
-
-
     @Override
     public ApiResponse getCoinDetails(String prompt) {
 
-        FunctionResponse res=getFunctionResponse(prompt);
-        String apiResponse=makeApiRequest(res.getCurrencyName()).toString();
+        FunctionResponse res = getFunctionResponse(prompt);
+        String apiResponse = makeApiRequest(res.getCurrencyName()).toString();
 
-
-
-         String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" + API_KEY;
+        String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key="
+                + API_KEY;
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-
-
-
-String body="{\n" +
-        "  \"contents\": [\n" +
-        "    {\n" +
-        "      \"role\": \"user\",\n" +
-        "      \"parts\": [\n" +
-        "        {\n" +
-        "          \"text\": \"" + prompt + "\"\n" +
-        "        }\n" +
-        "      ]\n" +
-        "    },\n" +
-        "    {\n" +
-        "      \"role\": \"model\",\n" +
-        "      \"parts\": [\n" +
-        "        {\n" +
-        "          \"functionCall\": {\n" +
-        "            \"name\": \"getCoinDetails\",\n" +
-        "            \"args\": {\n" +
-        "              \"currencyName\": \"" +res.getCurrencyName() +"\",\n" +
-        "              \"currencyData\": \""+ res.getCurrencyData() + "\"\n" +
-        "            }\n" +
-        "          }\n" +
-        "        }\n" +
-        "      ]\n" +
-        "    },\n" +
-        "    {\n" +
-        "      \"role\": \"function\",\n" +
-        "      \"parts\": [\n" +
-        "        {\n" +
-        "          \"functionResponse\": {\n" +
-        "            \"name\": \"getCoinDetails\",\n" +
-        "            \"response\": {\n" +
-        "              \"name\": \"getCoinDetails\",\n" +
-        "              \"content\": " + apiResponse + "\n" +
-        "            }\n" +
-        "          }\n" +
-        "        }\n" +
-        "      ]\n" +
-        "    }\n" +
-        "  ],\n" +
-        "  \"tools\": [\n" +
-        "    {\n" +
-        "      \"functionDeclarations\": [\n" +
-        "        {\n" +
-        "          \"name\": \"getCoinDetails\",\n" +
-        "          \"description\": \"Get crypto currency data from given currency object.\",\n" +
-        "          \"parameters\": {\n" +
-        "            \"type\": \"OBJECT\",\n" +
-        "            \"properties\": {\n" +
-        "              \"currencyName\": {\n" +
-        "                \"type\": \"STRING\",\n" +
-        "                \"description\": \"The currency Name, id, symbol .\"\n" +
-        "              },\n" +
-        "              \"currencyData\": {\n" +
-        "                \"type\": \"STRING\",\n" +
-        "                \"description\": \"The currency data id, symbol, current price, image, market cap extra... \"\n" +
-        "              }\n" +
-        "            },\n" +
-        "            \"required\": [\"currencyName\",\"currencyData\"]\n" +
-        "          }\n" +
-        "        },\n" +
-        "        {\n" +
-        "          \"name\": \"find_theaters\",\n" +
-        "          \"description\": \"find theaters based on location and optionally movie title which is currently playing in theaters\",\n" +
-        "          \"parameters\": {\n" +
-        "            \"type\": \"OBJECT\",\n" +
-        "            \"properties\": {\n" +
-        "              \"location\": {\n" +
-        "                \"type\": \"STRING\",\n" +
-        "                \"description\": \"The city and state, e.g. San Francisco, CA or a zip code e.g. 95616\"\n" +
-        "              },\n" +
-        "              \"movie\": {\n" +
-        "                \"type\": \"STRING\",\n" +
-        "                \"description\": \"Any movie title\"\n" +
-        "              }\n" +
-        "            },\n" +
-        "            \"required\": [\"location\"]\n" +
-        "          }\n" +
-        "        },\n" +
-        "        {\n" +
-        "          \"name\": \"get_showtimes\",\n" +
-        "          \"description\": \"Find the start times for movies playing in a specific theater\",\n" +
-        "          \"parameters\": {\n" +
-        "            \"type\": \"OBJECT\",\n" +
-        "            \"properties\": {\n" +
-        "              \"location\": {\n" +
-        "                \"type\": \"STRING\",\n" +
-        "                \"description\": \"The city and state, e.g. San Francisco, CA or a zip code e.g. 95616\"\n" +
-        "              },\n" +
-        "              \"movie\": {\n" +
-        "                \"type\": \"STRING\",\n" +
-        "                \"description\": \"Any movie title\"\n" +
-        "              },\n" +
-        "              \"theater\": {\n" +
-        "                \"type\": \"STRING\",\n" +
-        "                \"description\": \"Name of the theater\"\n" +
-        "              },\n" +
-        "              \"date\": {\n" +
-        "                \"type\": \"STRING\",\n" +
-        "                \"description\": \"Date for requested showtime\"\n" +
-        "              }\n" +
-        "            },\n" +
-        "            \"required\": [\"location\", \"movie\", \"theater\", \"date\"]\n" +
-        "          }\n" +
-        "        }\n" +
-        "      ]\n" +
-        "    }\n" +
-        "  ]\n" +
-        "}";
-
-
+        String body = "{\n" +
+                "  \"contents\": [\n" +
+                "    {\n" +
+                "      \"role\": \"user\",\n" +
+                "      \"parts\": [\n" +
+                "        {\n" +
+                "          \"text\": \"" + prompt + "\"\n" +
+                "        }\n" +
+                "      ]\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"role\": \"model\",\n" +
+                "      \"parts\": [\n" +
+                "        {\n" +
+                "          \"functionCall\": {\n" +
+                "            \"name\": \"getCoinDetails\",\n" +
+                "            \"args\": {\n" +
+                "              \"currencyName\": \"" + res.getCurrencyName() + "\",\n" +
+                "              \"currencyData\": \"" + res.getCurrencyData() + "\"\n" +
+                "            }\n" +
+                "          }\n" +
+                "        }\n" +
+                "      ]\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"role\": \"function\",\n" +
+                "      \"parts\": [\n" +
+                "        {\n" +
+                "          \"functionResponse\": {\n" +
+                "            \"name\": \"getCoinDetails\",\n" +
+                "            \"response\": {\n" +
+                "              \"name\": \"getCoinDetails\",\n" +
+                "              \"content\": " + apiResponse + "\n" +
+                "            }\n" +
+                "          }\n" +
+                "        }\n" +
+                "      ]\n" +
+                "    }\n" +
+                "  ],\n" +
+                "  \"tools\": [\n" +
+                "    {\n" +
+                "      \"functionDeclarations\": [\n" +
+                "        {\n" +
+                "          \"name\": \"getCoinDetails\",\n" +
+                "          \"description\": \"Get crypto currency data from given currency object.\",\n" +
+                "          \"parameters\": {\n" +
+                "            \"type\": \"OBJECT\",\n" +
+                "            \"properties\": {\n" +
+                "              \"currencyName\": {\n" +
+                "                \"type\": \"STRING\",\n" +
+                "                \"description\": \"The currency Name, id, symbol .\"\n" +
+                "              },\n" +
+                "              \"currencyData\": {\n" +
+                "                \"type\": \"STRING\",\n" +
+                "                \"description\": \"The currency data id, symbol, current price, image, market cap extra... \"\n"
+                +
+                "              }\n" +
+                "            },\n" +
+                "            \"required\": [\"currencyName\",\"currencyData\"]\n" +
+                "          }\n" +
+                "        },\n" +
+                "        {\n" +
+                "          \"name\": \"find_theaters\",\n" +
+                "          \"description\": \"find theaters based on location and optionally movie title which is currently playing in theaters\",\n"
+                +
+                "          \"parameters\": {\n" +
+                "            \"type\": \"OBJECT\",\n" +
+                "            \"properties\": {\n" +
+                "              \"location\": {\n" +
+                "                \"type\": \"STRING\",\n" +
+                "                \"description\": \"The city and state, e.g. San Francisco, CA or a zip code e.g. 95616\"\n"
+                +
+                "              },\n" +
+                "              \"movie\": {\n" +
+                "                \"type\": \"STRING\",\n" +
+                "                \"description\": \"Any movie title\"\n" +
+                "              }\n" +
+                "            },\n" +
+                "            \"required\": [\"location\"]\n" +
+                "          }\n" +
+                "        },\n" +
+                "        {\n" +
+                "          \"name\": \"get_showtimes\",\n" +
+                "          \"description\": \"Find the start times for movies playing in a specific theater\",\n" +
+                "          \"parameters\": {\n" +
+                "            \"type\": \"OBJECT\",\n" +
+                "            \"properties\": {\n" +
+                "              \"location\": {\n" +
+                "                \"type\": \"STRING\",\n" +
+                "                \"description\": \"The city and state, e.g. San Francisco, CA or a zip code e.g. 95616\"\n"
+                +
+                "              },\n" +
+                "              \"movie\": {\n" +
+                "                \"type\": \"STRING\",\n" +
+                "                \"description\": \"Any movie title\"\n" +
+                "              },\n" +
+                "              \"theater\": {\n" +
+                "                \"type\": \"STRING\",\n" +
+                "                \"description\": \"Name of the theater\"\n" +
+                "              },\n" +
+                "              \"date\": {\n" +
+                "                \"type\": \"STRING\",\n" +
+                "                \"description\": \"Date for requested showtime\"\n" +
+                "              }\n" +
+                "            },\n" +
+                "            \"required\": [\"location\", \"movie\", \"theater\", \"date\"]\n" +
+                "          }\n" +
+                "        }\n" +
+                "      ]\n" +
+                "    }\n" +
+                "  ]\n" +
+                "}";
 
         HttpEntity<String> request = new HttpEntity<>(body, headers);
         RestTemplate restTemplate = new RestTemplate();
@@ -293,7 +288,7 @@ String body="{\n" +
         ReadContext ctx = JsonPath.parse(response.getBody());
 
         String text = ctx.read("$.candidates[0].content.parts[0].text");
-        ApiResponse ans=new ApiResponse();
+        ApiResponse ans = new ApiResponse();
         ans.setMessage(text);
 
         return ans;
@@ -302,13 +297,14 @@ String body="{\n" +
     @Override
     public CoinDTO getCoinByName(String coinName) {
         return this.makeApiRequest(coinName);
-//        return null;
+        // return null;
     }
 
     @Override
     public String simpleChat(String prompt) {
 
-        String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" + API_KEY;
+        String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key="
+                + API_KEY;
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -332,13 +328,11 @@ String body="{\n" +
         RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<String> response = restTemplate.postForEntity(GEMINI_API_URL, requestEntity, String.class);
 
-
         String responseBody = response.getBody();
 
         System.out.println("Response Body: " + responseBody);
 
         return responseBody;
     }
-
 
 }

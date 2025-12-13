@@ -311,7 +311,7 @@ export const invoices = [
 ];
 
 export function AssetTable({ coins, category }) {
-  
+
   const navigate = useNavigate();
 
   return (
@@ -331,7 +331,7 @@ export function AssetTable({ coins, category }) {
         <TableBody className="">
           {coins.map((item) => (
             <TableRow
-            className="cursor-pointer"
+              className="cursor-pointer"
               onClick={() => navigate(`/market/${item.id}`)}
               key={item.id}
             >
@@ -345,11 +345,10 @@ export function AssetTable({ coins, category }) {
               <TableCell>{item.total_volume}</TableCell>
               <TableCell>{item.market_cap}</TableCell>
               <TableCell
-                className={`${
-                  item.market_cap_change_percentage_24h < 0
-                    ? "text-red-600"
-                    : "text-green-600"
-                }`}
+                className={`${item.market_cap_change_percentage_24h < 0
+                  ? "text-red-600"
+                  : "text-green-600"
+                  }`}
               >
                 {item.market_cap_change_percentage_24h}%
               </TableCell>
