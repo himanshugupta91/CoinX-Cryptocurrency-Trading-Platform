@@ -8,7 +8,8 @@ A full-stack cryptocurrency trading platform similar to Binance, built with **Sp
 
 This section presents the project in academic report format with chapter-wise structure.
 
-## Chapter 1: Introduction
+<details>
+<summary><strong>📘 Chapter 1: Introduction</strong></summary>
 
 ### 1.1 Background of the Project
 The rapid growth of digital assets has transformed cryptocurrency trading from a niche activity into a mainstream financial operation used by retail users, developers, and institutions. Modern users expect not only buy and sell capabilities, but also secure authentication, live market visibility, transaction history, portfolio insights, and reliable payment workflows. CoinX is developed in this context as a full-stack trading platform that combines a React-based user interface with a Spring Boot backend to deliver a realistic end-to-end trading experience. The project is positioned as both a functional platform and a technical demonstration of how core exchange-like modules can be designed in a layered, maintainable architecture.
@@ -34,7 +35,10 @@ The project does not target high-frequency exchange infrastructure, institutiona
 ### 1.6 Organization of the Report
 This report is organized to move from concept to execution in a structured way. Chapter 1 introduces the project context, need, and goals. Chapter 2 examines relevant existing systems and identifies practical gaps addressed by CoinX. Chapter 3 formalizes system requirements and feasibility dimensions. Chapter 4 presents the complete design perspective, including architecture, DFD, UML, ER modeling, and UI structure. Chapter 5 explains implementation details, technologies, core modules, and algorithmic logic. Chapter 6 documents testing strategy and observed outcomes. Chapter 7 discusses resulting behavior, performance, and comparative value. Chapter 8 concludes the work, highlights current limitations, and identifies future enhancement directions. References and appendices are provided at the end for technical traceability and project reuse.
 
-## Chapter 2: Literature Review
+</details>
+
+<details>
+<summary><strong>📗 Chapter 2: Literature Review</strong></summary>
 
 ### 2.1 Introduction
 The purpose of this chapter is to evaluate existing categories of cryptocurrency software and derive practical design insights for CoinX. Instead of focusing only on feature lists, the review considers architectural maturity, transactional consistency, security posture, and user workflow completeness. This analysis helps establish why a new integrated model is needed and how CoinX positions itself relative to currently available systems.
@@ -68,7 +72,10 @@ The comparative view below summarizes how CoinX differs from common tracker-styl
 | Frontend Architecture | Varies | Minimal | React + Redux + modular UI |
 | Backend Architecture | API-light | Minimal | Spring Boot layered architecture |
 
-## Chapter 3: System Analysis and Requirements
+</details>
+
+<details>
+<summary><strong>📙 Chapter 3: System Analysis and Requirements</strong></summary>
 
 ### 3.1 System Overview
 CoinX follows a layered client-server model in which the React application acts as the interaction layer and the Spring Boot backend provides RESTful services for domain operations. The backend is structured using controller, service, and repository tiers to separate request handling, business logic, and data persistence. This separation improves maintainability and enables targeted testing for each concern area. External provider integration is handled through dedicated service methods, allowing the platform to fetch market data, generate payment links, verify payment states, and process conversational prompts without tightly coupling external logic to core domain workflows.
@@ -101,7 +108,10 @@ The software environment required to run CoinX includes Java 17 or above, Maven 
 
 On the hardware side, a dual-core 2.0 GHz or higher processor, at least 8 GB RAM, and approximately 10 GB of free disk space are recommended for smooth local development and testing. A stable internet connection is required for interacting with external APIs such as market data providers, payment gateways, and mail services.
 
-## Chapter 4: System Design
+</details>
+
+<details>
+<summary><strong>📐 Chapter 4: System Design</strong></summary>
 
 ### 4.1 System Architecture
 
@@ -184,7 +194,9 @@ flowchart LR
 
 ### 4.2 Data Flow Diagrams (DFD)
 
-#### DFD Level 0 (Context Diagram)
+<details>
+<summary>DFD Level 0 (Context Diagram)</summary>
+
 ```mermaid
 flowchart LR
     User[User]
@@ -208,7 +220,11 @@ flowchart LR
     AI -->|Response| CoinX
 ```
 
-#### DFD Level 1
+</details>
+
+<details>
+<summary>DFD Level 1</summary>
+
 ```mermaid
 flowchart TB
     U[User]
@@ -256,7 +272,11 @@ flowchart TB
     P6 <--> ExtMail
 ```
 
-#### DFD Level 2 (Order Execution Process)
+</details>
+
+<details>
+<summary>DFD Level 2 (Order Execution Process)</summary>
+
 ```mermaid
 flowchart LR
     U[User] --> O1[3.1 Submit Order Request]
@@ -282,9 +302,13 @@ flowchart LR
     D6[(WalletTransaction)] --> O8
 ```
 
+</details>
+
 ### 4.3 UML Diagrams
 
-#### Use Case Diagram
+<details>
+<summary>Use Case Diagram</summary>
+
 ```mermaid
 flowchart LR
     User((User))
@@ -332,7 +356,11 @@ flowchart LR
     UC15 --> Mail
 ```
 
-#### Class Diagram
+</details>
+
+<details>
+<summary>Class Diagram</summary>
+
 ```mermaid
 classDiagram
     class User {
@@ -439,7 +467,11 @@ classDiagram
     Asset "*" --> "1" Coin : tracks
 ```
 
-#### Sequence Diagram
+</details>
+
+<details>
+<summary>Sequence Diagram</summary>
+
 ```mermaid
 sequenceDiagram
     participant User
@@ -469,7 +501,11 @@ sequenceDiagram
     FE-->>User: refresh portfolio and wallet widgets
 ```
 
-#### Activity Diagram
+</details>
+
+<details>
+<summary>Activity Diagram</summary>
+
 ```mermaid
 flowchart TD
     Start([Start]) --> Login[User Login]
@@ -504,9 +540,13 @@ flowchart TD
     Refresh --> End
 ```
 
+</details>
+
 ### 4.4 Database Design
 
-#### ER Diagram
+<details>
+<summary>ER Diagram</summary>
+
 ```mermaid
 erDiagram
     USER ||--|| WALLET : owns
@@ -623,7 +663,10 @@ erDiagram
     }
 ```
 
-#### Data Dictionary
+</details>
+
+<details>
+<summary>Data Dictionary</summary>
 
 | Table | Field | Type | Constraints | Description |
 |---|---|---|---|---|
@@ -683,7 +726,12 @@ erDiagram
 | `two_factor_otp` | `user_id` | BIGINT | FK -> user.id | Related user |
 | `two_factor_otp` | `jwt_token` | TEXT/VARCHAR | Not Null | Deferred JWT after OTP verification |
 
+</details>
+
 ### 4.5 User Interface Design
+
+<details>
+<summary>UI Navigation Diagram</summary>
 
 The UI follows a role-aware dashboard model with clear navigation and transaction-focused workflows.
 
@@ -742,7 +790,12 @@ UI design principles:
 - Role-based route rendering for admin-only features.
 - Mobile-friendly responsive behavior using Tailwind utility classes.
 
-## Chapter 5: Implementation
+</details>
+
+</details>
+
+<details>
+<summary><strong>⚙️ Chapter 5: Implementation</strong></summary>
 
 ### 5.1 Development Environment
 The development environment for CoinX is designed for portability and fast iteration. Backend services are implemented with Java 17 and Spring Boot, built through Maven, and executed as a standalone API service. Frontend development uses React 18 with Vite for fast hot-reload and optimized production bundling. The data layer is backed by MySQL 8, and the project can be developed on Windows, macOS, or Linux with standard developer tooling such as IntelliJ IDEA or VS Code. This environment selection ensures contributors can run the complete stack locally with minimal setup friction.
@@ -779,7 +832,10 @@ const response = await axios.get(`${API_BASE_URL}/coins?page=${page}`);
 dispatch({ type: FETCH_COIN_LIST_SUCCESS, payload: response.data });
 ```
 
-## Chapter 6: Testing
+</details>
+
+<details>
+<summary><strong>🧪 Chapter 6: Testing</strong></summary>
 
 ### 6.1 Testing Strategy
 The testing strategy follows a layered approach to reduce regression risk across both backend and frontend surfaces. Unit-level verification is used to validate business logic behavior in isolation, while integration testing verifies interactions between controllers, services, repositories, and database entities. In parallel, frontend behavior is validated for route transitions, action dispatch flows, and user-triggered state updates. End-to-end manual validation is used to confirm complete user journeys, especially for sensitive flows such as order placement, payment confirmation, and withdrawal processing.
@@ -808,7 +864,10 @@ The table below summarizes representative test coverage for major operational sc
 | TC-07 | Admin decline withdrawal | Amount refunded to wallet | Pass |
 | TC-08 | Access protected API without token | Unauthorized/forbidden response | Pass |
 
-## Chapter 7: Results and Discussion
+</details>
+
+<details>
+<summary><strong>📊 Chapter 7: Results and Discussion</strong></summary>
 
 ### 7.1 Output Screens
 The resulting application provides complete user-facing screens for authentication, dashboard navigation, coin exploration, trade execution, wallet management, and profile operations. Authentication screens include signup, signin, two-factor confirmation, and password reset pathways. The main dashboard presents market cards and quick navigation into detailed coin views with chart visualization and trading forms. Wallet-related screens support top-up, transfer, withdrawal, and transaction history exploration, while portfolio and activity pages summarize user-level financial actions. An additional admin interface is available for withdrawal request supervision and action processing.
@@ -819,7 +878,10 @@ Performance observations indicate that the platform is suitable for educational 
 ### 7.3 Comparison with Existing System
 Compared with many student-oriented implementations, CoinX provides a more cohesive and operationally complete architecture by integrating identity, trading, wallet, payment, and admin governance in a single flow. Rather than presenting disconnected feature demos, the system demonstrates how state transitions propagate across modules and how external services are orchestrated without abandoning core domain consistency. This makes CoinX a stronger base for both academic reporting and future product-oriented enhancement.
 
-## Chapter 8: Conclusion and Future Scope
+</details>
+
+<details>
+<summary><strong>🏁 Chapter 8: Conclusion and Future Scope</strong></summary>
 
 ### 8.1 Conclusion
 CoinX successfully demonstrates a full-stack cryptocurrency trading platform with practical module integration and clear lifecycle handling for core financial operations. The project delivers secure authentication, role-aware access, market-data interaction, order execution, wallet settlement, and withdrawal administration within a structured architecture. From an academic and engineering perspective, the implementation meets its key goals of modularity, workflow completeness, and extensibility.
@@ -830,7 +892,11 @@ Despite its functional coverage, the current system has known limitations. It de
 ### 8.3 Future Enhancements
 Future improvements will focus on strengthening security depth, operational scalability, and product intelligence. Planned directions include fine-grained role policies, audit logging, and hardened payment verification with webhook signature validation. Engineering enhancements include containerized deployment, CI/CD automation, richer test suites, and structured monitoring dashboards. Product enhancements may include intelligent alerts, advanced analytics, recommendation workflows, and expanded support for multi-asset strategy features.
 
-## References
+</details>
+
+<details>
+<summary><strong>📚 References</strong></summary>
+
 The design and implementation decisions in this project are based on official documentation, SDK references, and framework-level best practices from the following technical sources:
 
 1. Spring Boot Documentation: https://spring.io/projects/spring-boot  
@@ -843,7 +909,10 @@ The design and implementation decisions in this project are based on official do
 8. Razorpay API Documentation: https://razorpay.com/docs  
 9. Mermaid Documentation: https://mermaid.js.org  
 
-## Appendices
+</details>
+
+<details>
+<summary><strong>📎 Appendices</strong></summary>
 
 ### A. Source Code
 The complete source code of the project is organized into two primary directories. The backend implementation, including APIs, security, services, and persistence models, is available under `Backend-Spring boot/`. The frontend implementation, including routing, UI components, Redux state modules, and page-level flows, is available under `Frontend-React/`. Together, these directories represent the executable full-stack codebase of CoinX.
@@ -854,8 +923,12 @@ The user manual is included through project documentation and setup instructions
 ### C. Project Publication
 This section is reserved for future publication metadata related to the project, including journal or conference submission details, DOI information, institutional repository links, and demonstration or presentation references. As the project evolves, this appendix can be updated to include formal dissemination records and citation-ready publication entries.
 
+</details>
 
-## 🌟 Features
+---
+
+<details>
+<summary><strong>🌟 Features</strong></summary>
 
 ### 🔐 Authentication & Security
 - JWT-based authentication with Spring Security
@@ -892,9 +965,12 @@ This section is reserved for future publication metadata related to the project,
 - Email notifications
 - Admin panel for withdrawals and user management
 
+</details>
+
 ---
 
-## 🛠️ Technology Stack
+<details>
+<summary><strong>🛠️ Technology Stack</strong></summary>
 
 ### Backend (Spring Boot)
 - **Framework**: Spring Boot 3.2.4
@@ -931,9 +1007,12 @@ This section is reserved for future publication metadata related to the project,
   - Tailwind Merge
   - Input OTP
 
+</details>
+
 ---
 
-## 📁 Project Structure
+<details>
+<summary><strong>📁 Project Structure</strong></summary>
 
 ### Backend Structure
 ```
@@ -995,9 +1074,12 @@ Frontend-React/
 └── tailwind.config.js
 ```
 
+</details>
+
 ---
 
-## 🚀 Getting Started
+<details>
+<summary><strong>🚀 Getting Started</strong></summary>
 
 ### Prerequisites
 - **Java**: JDK 17 or higher
@@ -1086,9 +1168,12 @@ Frontend-React/
    npm run build
    ```
 
+</details>
+
 ---
 
-## 🔑 Environment Variables
+<details>
+<summary><strong>🔑 Environment Variables</strong></summary>
 
 ### Backend (.env or application.properties)
 ```properties
@@ -1117,9 +1202,12 @@ spring.security.oauth2.client.registration.google.client-id=your_google_client_i
 spring.security.oauth2.client.registration.google.client-secret=your_google_client_secret
 ```
 
+</details>
+
 ---
 
-## 📡 API Endpoints
+<details>
+<summary><strong>📡 API Endpoints</strong></summary>
 
 ### Authentication
 - `POST /auth/signup` - Register new user
@@ -1155,9 +1243,12 @@ spring.security.oauth2.client.registration.google.client-secret=your_google_clie
 - `POST /api/payment/razorpay` - Create Razorpay order
 - `POST /api/payment/stripe` - Create Stripe payment
 
+</details>
+
 ---
 
-## 🎨 UI Features
+<details>
+<summary><strong>🎨 UI Features</strong></summary>
 
 ### Modern Design
 - **Glassmorphism effects** with floating glass navbar
@@ -1175,9 +1266,12 @@ spring.security.oauth2.client.registration.google.client-secret=your_google_clie
 - Scroll areas for long lists
 - Avatar components for user profiles
 
+</details>
+
 ---
 
-## 🧪 Testing
+<details>
+<summary><strong>🧪 Testing</strong></summary>
 
 ### Backend Tests
 ```bash
@@ -1191,9 +1285,12 @@ cd "Frontend-React"
 npm run lint
 ```
 
+</details>
+
 ---
 
-## 📦 Build & Deployment
+<details>
+<summary><strong>📦 Build & Deployment</strong></summary>
 
 ### Backend Production Build
 ```bash
@@ -1209,9 +1306,12 @@ npm run build
 # Output will be in the 'dist' folder
 ```
 
+</details>
+
 ---
 
-## 🔒 Security Features
+<details>
+<summary><strong>🔒 Security Features</strong></summary>
 
 - **JWT Authentication**: Secure token-based authentication
 - **Password Encryption**: BCrypt password hashing
@@ -1221,9 +1321,12 @@ npm run build
 - **XSS Protection**: React's built-in XSS protection
 - **2FA Support**: Two-factor authentication for enhanced security
 
+</details>
+
 ---
 
-## 🤝 Contributing
+<details>
+<summary><strong>🤝 Contributing</strong></summary>
 
 Contributions are welcome! Please follow these steps:
 
@@ -1233,10 +1336,15 @@ Contributions are welcome! Please follow these steps:
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
+</details>
+
 ---
 
-## 📄 License
+<details>
+<summary><strong>📄 License</strong></summary>
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+</details>
 
 ---
