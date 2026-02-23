@@ -1,12 +1,575 @@
+<p align="center">
+  <img src="https://img.shields.io/badge/Spring%20Boot-3.4.2-6DB33F?style=for-the-badge&logo=springboot&logoColor=white" />
+  <img src="https://img.shields.io/badge/Java-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white" />
+  <img src="https://img.shields.io/badge/React-18.2-61DAFB?style=for-the-badge&logo=react&logoColor=black" />
+  <img src="https://img.shields.io/badge/Vite-7.2-646CFF?style=for-the-badge&logo=vite&logoColor=white" />
+  <img src="https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white" />
+  <img src="https://img.shields.io/badge/Redux%20Toolkit-2.11-764ABC?style=for-the-badge&logo=redux&logoColor=white" />
+  <img src="https://img.shields.io/badge/Tailwind%20CSS-3.4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" />
+  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" />
+</p>
+
 # CoinX - Cryptocurrency Trading Platform
 
-A crypto trading platform I built with **Spring Boot** (backend) and **React** (frontend). Think of it as a simplified Binance — users can browse live coin markets, buy/sell crypto, manage their wallet, track portfolio, and process payments through Stripe or Razorpay.
+A full-stack crypto trading platform built with **Spring Boot** and **React**. Users can sign up, browse live coin markets (via CoinGecko), buy and sell crypto with real wallet debit/credit, manage wallets, track portfolio performance, and process payments through Stripe or Razorpay. Admins can approve or decline withdrawal requests.
+
+---
+
+## What's Inside
+
+| Area | Details |
+|---|---|
+| **Backend** | 12 REST Controllers · 13 Service Interfaces · 16 Service Implementations · 17 JPA Entities |
+| **Frontend** | 16 Page Modules · 7 Redux Slices · Radix UI Components · Tailwind CSS |
+| **Security** | JWT (HMAC-SHA, 24h expiry) · BCrypt · OAuth2 Google Login · 2FA via Email OTP |
+| **Integrations** | CoinGecko API · Stripe · Razorpay · Google Gemini (Chatbot) · SMTP Email |
+| **Database** | MySQL with Spring Data JPA · `@Transactional` for atomic order processing |
+
+---
+
+## Table of Contents
+
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [System Architecture](#system-architecture)
+- [Project Structure](#project-structure)
+- [Getting Started](#getting-started)
+- [Environment Variables](#environment-variables)
+- [API Endpoints](#api-endpoints)
+- [How It Works — Order Flow](#how-it-works--order-flow)
+- [Security](#security)
+- [Testing](#testing)
+- [Build for Production](#build-for-production)
+- [Project Report](#project-report)
+- [Contributing](#contributing)
+- [License](#license)
+
+---
+
+## Features
+
+**Auth & Security**
+- JWT-based stateless authentication with Spring Security
+- OAuth2 Google login with auto-registration
+- Optional two-factor authentication (email OTP)
+- BCrypt password hashing
+- Forgot password and account verification flows
+
+**Trading & Portfolio**
+- Live cryptocurrency prices and charts from CoinGecko
+- Buy/sell orders with real wallet balance checks and atomic settlement
+- Portfolio dashboard with coin holdings and buy price tracking
+- Personal watchlist for tracking favorite coins
+- Full order history with filtering by type and coin
+
+**Wallet & Payments**
+- Wallet balance stored as `BigDecimal` for financial precision
+- Top-up via Stripe Checkout or Razorpay payment widget
+- User-to-user wallet transfers with sender balance validation
+- Withdrawal requests with admin approval workflow
+- Every mutation logged as a `WalletTransaction` (full audit trail)
+
+**Admin Panel**
+- View all pending withdrawal requests
+- Approve or decline with automatic wallet balance adjustments
+
+**AI Chatbot**
+- Coin-related Q&A powered by Google Gemini API
+
+**UI**
+- Dark mode interface with glassmorphism and gradient backgrounds
+- Interactive coin charts (ApexCharts + Recharts)
+- Responsive layout — works on desktop and mobile
+- Toast notifications, modals, form validation
+
+---
+
+## Tech Stack
+
+### Backend
+
+| Component | Technology | Version |
+|---|---|---|
+| Framework | Spring Boot | 3.4.2 |
+| Language | Java | 21 |
+| Database | MySQL | 8+ |
+| ORM | Spring Data JPA + Hibernate | — |
+| Security | Spring Security + JWT (jjwt) | 0.13.0 |
+| Auth | OAuth2 Client (Google) | — |
+| Email | Spring Mail (SMTP) | — |
+| Payments | Stripe Java SDK | 26.0.0 |
+| Payments | Razorpay Java SDK | 1.4.8 |
+| Caching | Caffeine Cache | — |
+| Utilities | Lombok, JSON Path | — |
+| Build | Maven | — |
+
+### Frontend
+
+| Component | Technology | Version |
+|---|---|---|
+| Library | React | 18.2.0 |
+| Build Tool | Vite | 7.2.7 |
+| State | Redux Toolkit + Redux Thunk | 2.11.2 |
+| Routing | React Router DOM | 6.21.3 |
+| HTTP Client | Axios | 1.6.7 |
+| Styling | Tailwind CSS | 3.4.1 |
+| UI Components | Radix UI (Dialog, Select, Toast, Avatar, etc.) | — |
+| Charts | ApexCharts + React ApexCharts | 5.3.6 |
+| Icons | Lucide React + React Icons | — |
+| Forms | React Hook Form + Yup + Zod | — |
+
+---
+
+## System Architecture
+
+```mermaid
+flowchart TB
+    User[End User]
+    Admin[Admin User]
+
+    subgraph Frontend
+        WebApp[React + Vite SPA]
+        Redux[Redux Toolkit Store]
+        Router[React Router]
+        UI[Radix UI + Tailwind CSS]
+    end
+
+    subgraph Backend
+        Security[Spring Security + JWT Filter]
+        Controllers[12 REST Controllers]
+    end
+
+    subgraph Services
+        AuthSvc[Auth + User Services]
+        TradeSvc[Order + Asset Services]
+        WalletSvc[Wallet + Withdrawal Services]
+        PaymentSvc[Payment Service]
+        CoinSvc[Coin + Market Service]
+        ChatSvc[Chatbot Service]
+    end
+
+    subgraph Data
+        Repos[JPA Repositories]
+        MySQL[(MySQL)]
+    end
+
+    subgraph External
+        CoinGecko[CoinGecko API]
+        Stripe[Stripe]
+        Razorpay[Razorpay]
+        Gemini[Gemini AI]
+        SMTP[SMTP Mail]
+    end
+
+    User --> WebApp
+    Admin --> WebApp
+    WebApp --> Redux
+    WebApp --> Router
+    WebApp --> UI
+    WebApp --> Security
+    Security --> Controllers
+    Controllers --> AuthSvc
+    Controllers --> TradeSvc
+    Controllers --> WalletSvc
+    Controllers --> PaymentSvc
+    Controllers --> CoinSvc
+    Controllers --> ChatSvc
+    AuthSvc --> Repos
+    TradeSvc --> Repos
+    WalletSvc --> Repos
+    PaymentSvc --> Repos
+    CoinSvc --> Repos
+    Repos --> MySQL
+    CoinSvc --> CoinGecko
+    PaymentSvc --> Stripe
+    PaymentSvc --> Razorpay
+    ChatSvc --> Gemini
+    AuthSvc --> SMTP
+```
+
+---
+
+## Project Structure
+
+### Backend — `Backend-Spring boot/`
+
+```
+src/main/java/com/himanshu/
+├── config/                        # Security, CORS, JWT config
+│   ├── AppConfig.java             # SecurityFilterChain, CORS, BCrypt bean
+│   ├── JwtProvider.java           # JWT token generation + parsing
+│   ├── JwtTokenValidator.java     # OncePerRequestFilter for JWT validation
+│   ├── JwtConstant.java           # Secret key constant
+│   └── OAuth2SuccessHandler.java  # Google OAuth → JWT redirect
+│
+├── controller/                    # 12 REST controllers
+│   ├── AuthController.java        # /auth — signup, signin, 2FA
+│   ├── UserController.java        # /api/users — profile
+│   ├── CoinController.java        # /coins — market data
+│   ├── OrderController.java       # /api/orders — buy/sell
+│   ├── WalletController.java      # /api/wallet — balance, deposit, transfer
+│   ├── WatchlistController.java   # /api/watchlist — favorites
+│   ├── WithdrawalController.java  # /api/withdrawal — create, admin approve
+│   ├── PaymentController.java     # /api/payment — Stripe/Razorpay
+│   ├── PaymentDetailsController.java # /api — bank details
+│   ├── AssetController.java       # /api/assets — holdings
+│   ├── VerificationController.java # verification endpoints
+│   └── HomeController.java        # health check
+│
+├── model/                         # 17 JPA entities
+│   ├── User.java                  # id, email, password, role, twoFactorAuth
+│   ├── Wallet.java                # id, balance (BigDecimal), user
+│   ├── WalletTransaction.java     # type, amount, purpose, date
+│   ├── Order.java                 # orderType, status, price, timestamp
+│   ├── OrderItem.java             # coin, quantity, buyPrice, sellPrice
+│   ├── Coin.java                  # id, symbol, name, currentPrice
+│   ├── Asset.java                 # user, coin, quantity, buyPrice
+│   ├── Withdrawal.java            # amount, status, date
+│   ├── PaymentOrder.java          # amount, paymentMethod, status
+│   ├── PaymentDetails.java        # accountNumber, ifsc, bankName
+│   ├── Watchlist.java             # user, coins
+│   ├── VerificationCode.java      # otp, verificationType
+│   ├── ForgotPasswordToken.java   # otp, sendTo
+│   ├── TwoFactorOTP.java          # otp, jwt
+│   ├── TwoFactorAuth.java         # @Embeddable — isEnabled, sendTo
+│   ├── Notification.java          # notifications
+│   └── TreadingHistory.java       # trading history
+│
+├── service/                       # 13 interfaces + 16 implementations
+│   ├── OrderService.java → impl/OrderServiceImplementation.java
+│   ├── WalletService.java → impl/WalleteServiceImplementation.java
+│   ├── CoinService.java → impl/CoinServiceImpl.java
+│   ├── UserService.java → impl/UserServiceImplementation.java
+│   ├── AssetService.java → impl/AssetServiceImplementation.java
+│   ├── PaymentService.java → impl/PaymentServiceImpl.java
+│   ├── WithdrawalService.java → impl/WithdrawalServiceImpl.java
+│   ├── WatchlistService.java → impl/WatchlistServiceImpl.java
+│   ├── VerificationService.java → impl/VerificationServiceImpl.java
+│   ├── ForgotPasswordService.java → impl/ForgotPasswordServiceImpl.java
+│   ├── TwoFactorOtpService.java → impl/TwoFactorOtpServiceImpl.java
+│   ├── PaymentDetailsService.java → impl/PaymentDetailsServiceImpl.java
+│   ├── WalletTransactionService.java → impl/WalletTransactionServiceImpl.java
+│   └── impl/EmailService.java, impl/CustomeUserServiceImplementation.java
+│   └── impl/DataInitializationComponent.java
+│
+├── repository/                    # JPA repositories
+├── domain/                        # Enums (OrderType, OrderStatus, etc.)
+├── dto/                           # Data transfer objects
+├── request/                       # Request DTOs
+├── response/                      # Response DTOs
+├── exception/                     # Custom exception handlers
+└── utils/                         # Utility classes
+```
+
+### Frontend — `Frontend-React/`
+
+```
+src/
+├── pages/
+│   ├── Home/           # Dashboard with market coin cards
+│   ├── Landing/        # Public landing page
+│   ├── Auth/
+│   │   ├── login/      # Sign in form
+│   │   └── signup/     # Registration form
+│   ├── StockDetails/   # Coin detail view with charts + buy/sell
+│   ├── Portfolio/      # User's coin holdings
+│   ├── Wallet/         # Balance, top-up, transfer, withdrawal, history
+│   ├── Watchlist/      # Saved favorite coins
+│   ├── Activity/       # Trading history
+│   ├── Profile/        # User profile + 2FA settings
+│   ├── Search/         # Coin search
+│   ├── Navbar/         # Top navigation bar
+│   ├── SideBar/        # Side navigation
+│   ├── Footer/         # Footer
+│   └── Notfound/       # 404 page
+│
+├── Redux/
+│   ├── Store.js        # Redux store config
+│   ├── Auth/AuthSlice.js       # Login, signup, profile, JWT
+│   ├── Coin/CoinSlice.js       # Coin list, detail, charts, trending
+│   ├── Order/OrderSlice.js     # Place order, order history
+│   ├── Wallet/WalletSlice.js   # Balance, transactions, top-up
+│   ├── Watchlist/WatchlistSlice.js  # Watchlist CRUD
+│   ├── Withdrawal/WithdrawalSlice.js # Withdrawal requests
+│   └── Assets/AssetSlice.js    # Portfolio assets
+│
+├── components/
+│   ├── ui/             # Reusable Radix-based components
+│   └── custome/        # Custom project components
+│
+├── Api/api.js          # Axios instance + request/response interceptors
+├── Util/               # Helper functions
+├── assets/             # Images, static files
+└── lib/                # Utility libraries
+```
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+| Tool | Version |
+|---|---|
+| Java JDK | 21+ |
+| Maven | 3.6+ |
+| Node.js | 16+ |
+| MySQL | 8.0+ |
+
+### 1. Clone the repo
+
+```bash
+git clone https://github.com/himanshugupta91/CoinX-Cryptocurrency-Trading-Platform.git
+cd CoinX-Cryptocurrency-Trading-Platform
+```
+
+### 2. Setup MySQL
+
+```sql
+CREATE DATABASE trading_platform;
+```
+
+### 3. Backend Setup
+
+```bash
+cd "Backend-Spring boot"
+```
+
+Create `src/main/resources/application.properties` (this file is gitignored):
+
+```properties
+# Database
+spring.datasource.url=jdbc:mysql://localhost:3306/trading_platform
+spring.datasource.username=root
+spring.datasource.password=your_password
+spring.jpa.hibernate.ddl-auto=update
+
+# JWT
+jwt.secret=your_secret_key
+
+# Razorpay
+razorpay.key.id=your_razorpay_key
+razorpay.key.secret=your_razorpay_secret
+
+# Stripe
+stripe.api.key=your_stripe_key
+
+# Email (Gmail SMTP)
+spring.mail.host=smtp.gmail.com
+spring.mail.port=587
+spring.mail.username=your_email@gmail.com
+spring.mail.password=your_app_password
+
+# Server
+server.port=5454
+```
+
+```bash
+mvn clean install
+mvn spring-boot:run
+# Backend runs at http://localhost:5454
+```
+
+### 4. Frontend Setup
+
+```bash
+cd "Frontend-React"
+npm install
+npm run dev
+# Frontend runs at http://localhost:5173
+```
+
+---
+
+## Environment Variables
+
+The `application.properties` file is excluded from git for security. You'll need to set these:
+
+| Variable | Purpose | Where to Get |
+|---|---|---|
+| `spring.datasource.*` | MySQL connection | Your local MySQL |
+| `razorpay.key.id` / `razorpay.key.secret` | Razorpay payments | [Razorpay Dashboard](https://dashboard.razorpay.com) |
+| `stripe.api.key` | Stripe payments | [Stripe Dashboard](https://dashboard.stripe.com) |
+| `spring.mail.username` / `password` | Email OTP | Gmail App Password |
+| Google OAuth2 client ID/secret | Google login | [Google Cloud Console](https://console.cloud.google.com) |
+
+---
+
+## API Endpoints
+
+### Auth — `/auth`
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| POST | `/auth/signup` | Register new user | No |
+| POST | `/auth/signin` | Login, returns JWT | No |
+| POST | `/auth/two-factor/otp/{otp}` | Verify 2FA OTP | No |
+
+### Users — `/api/users`
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| GET | `/api/users/profile` | Get current user profile | JWT |
+| PUT | `/api/users/profile` | Update profile | JWT |
+
+### Coins — `/coins`
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| GET | `/coins` | List coins (paginated) | No |
+| GET | `/coins/{coinId}` | Coin details | No |
+| GET | `/coins/search?q=` | Search coins | No |
+| GET | `/coins/top50` | Top 50 by market cap | No |
+| GET | `/coins/trending` | Trending coins | No |
+| GET | `/coins/{coinId}/chart?days=` | Chart data | No |
+
+### Orders — `/api/orders`
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| POST | `/api/orders/pay` | Place BUY/SELL order | JWT |
+| GET | `/api/orders` | User's order history | JWT |
+| GET | `/api/orders/{orderId}` | Order details | JWT |
+
+### Wallet — `/api/wallet`
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| GET | `/api/wallet` | Get wallet balance | JWT |
+| PUT | `/api/wallet/deposit` | Credit wallet (after payment) | JWT |
+| PUT | `/api/wallet/transfer` | Transfer to another wallet | JWT |
+| GET | `/api/wallet/transactions` | Transaction history | JWT |
+
+### Assets — `/api/assets`
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| GET | `/api/assets` | Get user's coin holdings | JWT |
+| GET | `/api/assets/{assetId}` | Specific asset details | JWT |
+
+### Watchlist — `/api/watchlist`
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| GET | `/api/watchlist/user` | Get user's watchlist | JWT |
+| POST | `/api/watchlist/add/coin/{coinId}` | Add coin to watchlist | JWT |
+
+### Withdrawal
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| POST | `/api/withdrawal/{amount}` | Create withdrawal request | JWT |
+| PATCH | `/api/admin/withdrawal/{id}/proceed/{accept}` | Admin approve/decline | JWT (Admin) |
+| GET | `/api/admin/withdrawal` | All withdrawal requests | JWT (Admin) |
+
+### Payments
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| POST | `/api/payment/{paymentMethod}/amount/{amount}` | Create payment link | JWT |
+| GET | `/api/payment` | Verify payment callback | JWT |
+
+---
+
+## How It Works — Order Flow
+
+This is the core of the project. Here's what happens when a user clicks "Buy":
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant React as React App
+    participant Filter as JWT Filter
+    participant Controller as OrderController
+    participant Service as OrderService
+    participant Wallet as WalletService
+    participant Asset as AssetService
+    participant DB as MySQL
+
+    User->>React: Click Buy (coinId, qty)
+    React->>Filter: POST /api/orders/pay + JWT
+    Filter->>Filter: Validate token, set SecurityContext
+    Filter->>Controller: Authenticated request
+    Controller->>Service: processOrder(coin, qty, BUY, user)
+
+    Note over Service: @Transactional — all or nothing
+
+    Service->>Service: createOrderItem(coin, qty, buyPrice)
+    Service->>Service: createOrder(user, orderItem, BUY)
+    Service->>Wallet: payOrderPayment(order, user)
+    Wallet->>DB: Check balance >= order amount
+    Wallet->>DB: Debit wallet balance
+    Wallet->>DB: Save WalletTransaction
+    Service->>Asset: findAssetByUserIdAndCoinId()
+    alt Asset exists
+        Service->>Asset: updateAsset(+quantity)
+    else New coin
+        Service->>Asset: createAsset(user, coin, qty)
+    end
+    Service->>DB: order.status = SUCCESS
+    DB-->>React: 200 OK + order data
+    React-->>User: Updated portfolio + wallet
+```
+
+**Key points:**
+- The entire BUY/SELL flow is wrapped in `@Transactional` — if wallet debit fails, the order creation rolls back too
+- Wallet balance is `BigDecimal`, not `double`, because floating point and money don't mix
+- SELL flow checks asset quantity instead of wallet balance, and credits the wallet
+- If remaining asset value drops below 1 after a sell, the asset record is deleted (no dust)
+- Coin price at trade time is captured in `OrderItem.buyPrice` / `sellPrice` for accurate P&L
+
+---
+
+## Security
+
+| Layer | What It Does |
+|---|---|
+| **JWT Filter** | `JwtTokenValidator` runs before `BasicAuthenticationFilter`, validates token on every `/api/**` request |
+| **Password** | BCrypt hashing via `BCryptPasswordEncoder` — one-way, salted, adaptive |
+| **2FA** | Optional email OTP — deferred JWT until OTP is verified |
+| **OAuth2** | Google login → `OAuth2SuccessHandler` creates/finds user → redirects with JWT |
+| **CORS** | Whitelisted origins (localhost:3000, 5173, Vercel), Authorization header exposed |
+| **Session** | `STATELESS` — no server-side sessions, all state in JWT |
+| **CSRF** | Disabled (stateless API, not using cookies) |
+| **SQL Injection** | JPA parameterized queries |
+| **XSS** | React's built-in escaping |
+
+---
+
+## Testing
+
+```bash
+# Backend unit + integration tests
+cd "Backend-Spring boot"
+./mvnw test
+
+# Frontend linting
+cd "Frontend-React"
+npm run lint
+```
+
+| Test ID | Scenario | Result |
+|---|---|---|
+| TC-01 | Signup with valid data | Pass |
+| TC-02 | Login with wrong password | Pass |
+| TC-03 | BUY order with sufficient balance | Pass |
+| TC-04 | BUY order with insufficient balance | Pass |
+| TC-05 | Wallet top-up via payment callback | Pass |
+| TC-06 | Create withdrawal request | Pass |
+| TC-07 | Admin declines withdrawal | Pass |
+| TC-08 | API call without JWT token | Pass |
+
+---
+
+## Build for Production
+
+```bash
+# Backend — produces runnable JAR
+cd "Backend-Spring boot"
+./mvnw clean package
+java -jar target/treading-plateform-0.0.1-SNAPSHOT.jar
+
+# Frontend — static files in dist/
+cd "Frontend-React"
+npm run build
+```
 
 ---
 
 ## Project Report
 
-This section covers the project in report format.
+Full academic-style documentation with chapters, diagrams, and UML.
 
 <details>
 <summary><strong>Chapter 1: Introduction</strong></summary>
@@ -80,7 +643,7 @@ Low latency for common operations. JWT-based security with proper token validati
 **Operational**: The workflows match what users expect from a trading app. Modular design makes it manageable for a small team.
 
 ### 3.5 Requirements
-- Java 17+, Maven 3.6+, Node.js 16+, MySQL 8+
+- Java 21+, Maven 3.6+, Node.js 16+, MySQL 8+
 - 8 GB RAM, dual-core CPU, 10 GB disk, internet connection
 
 </details>
@@ -88,86 +651,7 @@ Low latency for common operations. JWT-based security with proper token validati
 <details>
 <summary><strong>Chapter 4: System Design</strong></summary>
 
-### 4.1 System Architecture
-
-```mermaid
-flowchart TB
-    User[End User]
-    Admin[Admin User]
-
-    subgraph Client Layer
-        WebApp[React + Vite SPA]
-        Redux[Redux Store]
-        Router[React Router]
-        UI[Radix UI + Tailwind]
-    end
-
-    subgraph API Layer
-        Security[Spring Security + JWT Filter]
-        Controllers[REST Controllers]
-    end
-
-    subgraph Business Layer
-        AuthSvc[Auth and User Services]
-        TradeSvc[Order and Asset Services]
-        WalletSvc[Wallet and Withdrawal Services]
-        PaymentSvc[Payment Service]
-        CoinSvc[Coin and Market Service]
-        ChatSvc[ChatBot Service]
-    end
-
-    subgraph Persistence Layer
-        Repos[JPA Repositories]
-        MySQL[(MySQL Database)]
-    end
-
-    subgraph External Integrations
-        CoinGecko[CoinGecko API]
-        Stripe[Stripe API]
-        Razorpay[Razorpay API]
-        Gemini[Gemini API]
-        MailSMTP[SMTP Mail Server]
-    end
-
-    User --> WebApp
-    Admin --> WebApp
-    WebApp --> Redux
-    WebApp --> Router
-    WebApp --> UI
-    WebApp --> Security
-    Security --> Controllers
-    Controllers --> AuthSvc
-    Controllers --> TradeSvc
-    Controllers --> WalletSvc
-    Controllers --> PaymentSvc
-    Controllers --> CoinSvc
-    Controllers --> ChatSvc
-    AuthSvc --> Repos
-    TradeSvc --> Repos
-    WalletSvc --> Repos
-    PaymentSvc --> Repos
-    CoinSvc --> Repos
-    Repos --> MySQL
-    CoinSvc --> CoinGecko
-    PaymentSvc --> Stripe
-    PaymentSvc --> Razorpay
-    ChatSvc --> Gemini
-    AuthSvc --> MailSMTP
-```
-
-```mermaid
-flowchart LR
-    Browser[Browser Client] --> Frontend[React Application]
-    Frontend --> API[Spring Boot Service :5454]
-    API --> DB[(MySQL Instance)]
-    API --> Ext1[CoinGecko]
-    API --> Ext2[Stripe]
-    API --> Ext3[Razorpay]
-    API --> Ext4[Gemini]
-    API --> Ext5[Email SMTP]
-```
-
-### 4.2 Data Flow Diagrams
+### 4.1 Data Flow Diagrams
 
 <details>
 <summary>DFD Level 0</summary>
@@ -279,7 +763,7 @@ flowchart LR
 
 </details>
 
-### 4.3 UML Diagrams
+### 4.2 UML Diagrams
 
 <details>
 <summary>Use Case Diagram</summary>
@@ -445,40 +929,6 @@ classDiagram
 </details>
 
 <details>
-<summary>Sequence Diagram — Buy Order</summary>
-
-```mermaid
-sequenceDiagram
-    participant User
-    participant FE as React Frontend
-    participant API as Spring API
-    participant CoinSvc as Coin Service
-    participant OrderSvc as Order Service
-    participant WalletSvc as Wallet Service
-    participant DB as Database
-
-    User->>FE: Click Buy and submit quantity
-    FE->>API: POST /api/orders/pay (JWT + coinId + qty + BUY)
-    API->>DB: Validate JWT and load user
-    API->>CoinSvc: fetch coin snapshot
-    CoinSvc->>DB: read coin
-    CoinSvc-->>API: coin details
-    API->>OrderSvc: processOrder(BUY)
-    OrderSvc->>WalletSvc: payOrderPayment
-    WalletSvc->>DB: verify wallet balance
-    WalletSvc->>DB: save wallet transaction
-    WalletSvc->>DB: update wallet balance
-    OrderSvc->>DB: create order + orderItem
-    OrderSvc->>DB: create or update asset
-    OrderSvc->>DB: mark order SUCCESS
-    DB-->>API: committed transaction
-    API-->>FE: 200 OK + order payload
-    FE-->>User: refresh portfolio and wallet widgets
-```
-
-</details>
-
-<details>
 <summary>Activity Diagram</summary>
 
 ```mermaid
@@ -517,7 +967,7 @@ flowchart TD
 
 </details>
 
-### 4.4 Database Design
+### 4.3 Database Design
 
 <details>
 <summary>ER Diagram</summary>
@@ -677,10 +1127,10 @@ erDiagram
 
 </details>
 
-### 4.5 UI Design
+### 4.4 UI Navigation
 
 <details>
-<summary>UI Navigation</summary>
+<summary>Navigation Diagram</summary>
 
 ```mermaid
 flowchart LR
@@ -710,8 +1160,6 @@ flowchart LR
     AdminDash --> WAdmin[Withdrawal Approval Panel]
 ```
 
-The UI uses a dashboard layout with top navigation. Loading/success/error states are shown clearly. Forms validate input before submission. Admin-only routes are hidden from regular users. Everything is responsive via Tailwind.
-
 </details>
 
 </details>
@@ -720,10 +1168,10 @@ The UI uses a dashboard layout with top navigation. Loading/success/error states
 <summary><strong>Chapter 5: Implementation</strong></summary>
 
 ### 5.1 Dev Environment
-Backend: Java 17, Spring Boot, Maven. Frontend: React 18, Vite (fast HMR). Database: MySQL 8. Works on Windows, macOS, or Linux with IntelliJ or VS Code.
+Backend: Java 21, Spring Boot 3.4.2, Maven. Frontend: React 18.2, Vite 7.2. Database: MySQL 8. Works on Windows, macOS, or Linux with IntelliJ or VS Code.
 
 ### 5.2 Tech Used
-**Backend**: Spring Boot for the API, Spring Security + JWT for auth, Spring Data JPA for database, Spring Mail for OTP emails, OAuth2 for Google login. **Frontend**: React for components, Redux for state, React Router for navigation, Axios for HTTP, Tailwind + Radix UI for styling. **External**: CoinGecko (market data), Stripe + Razorpay (payments), Gemini (chatbot).
+**Backend**: Spring Boot for the API, Spring Security + JWT for auth, Spring Data JPA for database, Spring Mail for OTP emails, OAuth2 for Google login, Caffeine for caching. **Frontend**: React for components, Redux Toolkit for state, React Router for navigation, Axios for HTTP, Tailwind + Radix UI for styling. **External**: CoinGecko (market data), Stripe + Razorpay (payments), Gemini (chatbot).
 
 ### 5.3 Modules
 - **Auth**: signup, signin, JWT, 2FA, password reset
@@ -740,7 +1188,7 @@ JWT generation uses HMAC-SHA signing with 24h expiry. OTP is a random 6-digit co
 ### 5.5 Code Snippets
 
 ```java
-// JWT generation
+// JWT generation in JwtProvider.java
 String jwt = Jwts.builder()
     .setIssuedAt(new Date())
     .setExpiration(new Date(new Date().getTime() + 86400000))
@@ -751,7 +1199,7 @@ String jwt = Jwts.builder()
 ```
 
 ```javascript
-// Fetching coin list
+// Fetching coin list in CoinSlice.js
 const response = await axios.get(`${API_BASE_URL}/coins?page=${page}`);
 dispatch({ type: FETCH_COIN_LIST_SUCCESS, payload: response.data });
 ```
@@ -773,19 +1221,6 @@ Key scenarios: authenticated endpoint access, order creation with wallet/asset s
 ### 6.4 System Testing
 Full user journey: signup → login → browse market → trade → wallet top-up → withdrawal → admin handling.
 
-### 6.5 Test Results
-
-| Test | Scenario | Expected | Status |
-|---|---|---|---|
-| TC-01 | Signup with valid data | Account created, JWT returned | Pass |
-| TC-02 | Wrong password login | Auth failure message | Pass |
-| TC-03 | BUY with enough balance | Order success, wallet debited | Pass |
-| TC-04 | BUY with low balance | Error, no state change | Pass |
-| TC-05 | Wallet top-up callback | Balance increased | Pass |
-| TC-06 | Create withdrawal | Saved as pending | Pass |
-| TC-07 | Admin declines withdrawal | Amount refunded | Pass |
-| TC-08 | API call without token | 401/403 response | Pass |
-
 </details>
 
 <details>
@@ -795,7 +1230,7 @@ Full user journey: signup → login → browse market → trade → wallet top-u
 Complete screens for auth (signup, signin, 2FA, password reset), dashboard with market cards, coin detail with charts and trading forms, wallet with top-up/transfer/withdrawal/history, portfolio, and admin withdrawal panel.
 
 ### 7.2 Performance
-Works fine for development and prototype usage. API responses are quick for typical loads. The slowest parts are external API calls (CoinGecko, Gemini) — those depend on network and provider quotas.
+Works well for development and prototype usage. API responses are quick for typical loads. The slowest parts are external API calls (CoinGecko, Gemini) — those depend on network and provider quotas.
 
 ### 7.3 Compared to Others
 Unlike most student projects, CoinX actually connects all the pieces. An order isn't just a form submission — it triggers wallet updates, asset changes, and transaction logging in one atomic operation. That's closer to how real exchanges work.
@@ -812,7 +1247,7 @@ CoinX does what it set out to do — a working crypto trading platform with prop
 Depends on third-party APIs (CoinGecko can be slow, payment gateways have quotas). No automated test suite beyond unit tests. Not designed for high-frequency trading or institutional use.
 
 ### 8.3 Future Work
-Redis caching for coin data, RabbitMQ for order processing, Docker + Kubernetes for deployment, CI/CD with GitHub Actions, Stripe webhook signature validation, rate limiting on auth endpoints, and proper monitoring with Prometheus + Grafana.
+Redis caching for coin data, RabbitMQ for order processing, Docker + Kubernetes for deployment, CI/CD with GitHub Actions, Stripe webhook signature validation, rate limiting on auth endpoints, and monitoring with Prometheus + Grafana.
 
 </details>
 
@@ -822,7 +1257,7 @@ Redis caching for coin data, RabbitMQ for order processing, Docker + Kubernetes 
 1. Spring Boot — https://spring.io/projects/spring-boot  
 2. Spring Security — https://spring.io/projects/spring-security  
 3. React — https://react.dev  
-4. Redux — https://redux.js.org  
+4. Redux Toolkit — https://redux-toolkit.js.org  
 5. Vite — https://vitejs.dev  
 6. CoinGecko API — https://www.coingecko.com/en/api/documentation  
 7. Stripe API — https://docs.stripe.com  
@@ -838,7 +1273,7 @@ Redis caching for coin data, RabbitMQ for order processing, Docker + Kubernetes 
 Backend code is in `Backend-Spring boot/`. Frontend code is in `Frontend-React/`.
 
 ### B. User Manual
-Setup instructions are in this README. Frontend-specific notes are in `Frontend-React/README.md`.
+Setup instructions are in the Getting Started section above. Frontend-specific notes are in `Frontend-React/README.md`.
 
 ### C. Publication
 Reserved for future publications, conference submissions, or institutional repository links.
@@ -847,246 +1282,16 @@ Reserved for future publications, conference submissions, or institutional repos
 
 ---
 
-<details>
-<summary><strong>Features</strong></summary>
-
-**Auth & Security**
-- JWT authentication with Spring Security
-- OAuth2 Google login
-- Two-factor auth (email OTP)
-- BCrypt password hashing
-
-**Trading**
-- Live coin prices from CoinGecko
-- Buy/sell with real wallet debit/credit
-- Portfolio with profit/loss tracking
-- Watchlist for favorite coins
-- Order history
-
-**Wallet & Payments**
-- Wallet balance management
-- Top-up via Stripe or Razorpay
-- User-to-user transfers
-- Withdrawal requests (admin-approved)
-- Full transaction history
-
-**UI**
-- Charts with ApexCharts and Recharts
-- Dark mode, glassmorphism, gradient backgrounds
-- Responsive layout with Tailwind
-
-**Admin**
-- Withdrawal approval/decline panel
-
-</details>
-
----
-
-<details>
-<summary><strong>Tech Stack</strong></summary>
-
-**Backend**
-- Spring Boot 3.2.4, Java 17
-- MySQL, Spring Data JPA
-- Spring Security + JWT
-- Maven
-- Stripe SDK, Razorpay SDK, Lombok
-
-**Frontend**
-- React 18.2, Vite 5.0
-- Redux + Redux Thunk
-- React Router 6.21
-- Axios
-- Tailwind CSS 3.4, Radix UI
-- ApexCharts, Recharts
-- React Hook Form + Yup/Zod
-
-</details>
-
----
-
-<details>
-<summary><strong>Project Structure</strong></summary>
-
-**Backend**
-```
-Backend-Spring boot/
-├── src/main/java/com/himanshu/
-│   ├── config/           # Security, CORS, JWT
-│   ├── controller/       # 12 REST controllers
-│   ├── domain/           # Enums
-│   ├── dto/              # Data transfer objects
-│   ├── exception/        # Error handlers
-│   ├── model/            # 17 JPA entities
-│   ├── repository/       # JPA repositories
-│   ├── request/          # Request DTOs
-│   ├── response/         # Response DTOs
-│   ├── service/          # 13 interfaces + 16 implementations
-│   └── utils/            # Helpers
-└── pom.xml
-```
-
-**Frontend**
-```
-Frontend-React/
-├── src/
-│   ├── pages/            # Home, Auth, Portfolio, Wallet, etc.
-│   ├── Redux/            # 7 slices (Auth, Coin, Order, Wallet, ...)
-│   ├── components/       # UI + custom components
-│   ├── Api/api.js        # Axios config
-│   ├── Util/             # Utilities
-│   └── assets/           # Static files
-├── package.json
-├── vite.config.js
-└── tailwind.config.js
-```
-
-</details>
-
----
-
-<details>
-<summary><strong>Getting Started</strong></summary>
-
-**Prerequisites**: Java 17+, Node.js 16+, MySQL 8+, Maven 3.6+
-
-**Backend**
-```bash
-cd "Backend-Spring boot"
-
-# Create your application.properties (not tracked in git):
-# spring.datasource.url=jdbc:mysql://localhost:3306/trading_platform
-# spring.datasource.username=your_user
-# spring.datasource.password=your_pass
-# + Stripe, Razorpay, SMTP keys
-
-mvn clean install
-mvn spring-boot:run
-# runs on http://localhost:5454
-```
-
-**Frontend**
-```bash
-cd "Frontend-React"
-npm install
-npm run dev
-# runs on http://localhost:5173
-```
-
-</details>
-
----
-
-<details>
-<summary><strong>API Endpoints</strong></summary>
-
-**Auth**
-- `POST /auth/signup` — register
-- `POST /auth/signin` — login
-- `POST /auth/verify-otp` — 2FA verification
-
-**Users**
-- `GET /api/users/profile` — get profile
-- `PUT /api/users/profile` — update profile
-
-**Coins**
-- `GET /api/coins` — list coins
-- `GET /api/coins/{id}` — coin detail
-- `GET /api/coins/search` — search
-
-**Orders**
-- `POST /api/orders` — place order
-- `GET /api/orders` — user's orders
-- `GET /api/orders/{id}` — order detail
-
-**Wallet**
-- `GET /api/wallet` — balance
-- `POST /api/wallet/deposit` — deposit
-- `POST /api/wallet/withdraw` — withdraw
-- `GET /api/wallet/transactions` — history
-
-**Watchlist**
-- `GET /api/watchlist` — get watchlist
-- `POST /api/watchlist/{coinId}` — add coin
-- `DELETE /api/watchlist/{coinId}` — remove coin
-
-**Payments**
-- `POST /api/payment/razorpay` — create Razorpay order
-- `POST /api/payment/stripe` — create Stripe session
-
-</details>
-
----
-
-<details>
-<summary><strong>Testing</strong></summary>
-
-```bash
-# Backend
-cd "Backend-Spring boot"
-./mvnw test
-
-# Frontend
-cd "Frontend-React"
-npm run lint
-```
-
-</details>
-
----
-
-<details>
-<summary><strong>Build for Production</strong></summary>
-
-```bash
-# Backend
-cd "Backend-Spring boot"
-./mvnw clean package
-java -jar target/treading-plateform-0.0.1-SNAPSHOT.jar
-
-# Frontend
-cd "Frontend-React"
-npm run build
-# output in dist/
-```
-
-</details>
-
----
-
-<details>
-<summary><strong>Security</strong></summary>
-
-- JWT for stateless auth
-- BCrypt for password hashing
-- CORS configured for known origins
-- Server-side input validation
-- JPA parameterized queries (no SQL injection)
-- React's built-in XSS protection
-- Optional 2FA via email OTP
-
-</details>
-
----
-
-<details>
-<summary><strong>Contributing</strong></summary>
+## Contributing
 
 1. Fork the repo
 2. Create a branch (`git checkout -b feature/something`)
-3. Commit (`git commit -m 'add something'`)
+3. Commit your changes (`git commit -m 'add something'`)
 4. Push (`git push origin feature/something`)
-5. Open a PR
-
-</details>
+5. Open a Pull Request
 
 ---
 
-<details>
-<summary><strong>License</strong></summary>
+## License
 
-MIT License. See LICENSE file.
-
-</details>
-
----
+MIT License. See LICENSE file for details.
