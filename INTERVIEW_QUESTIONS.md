@@ -1,222 +1,157 @@
-# 📈 CoinX — Interview Preparation Guide
+# CoinX — Interview Prep
 
 ---
 
-## 🎯 About the Project (How to Explain in an Interview)
+## How to Explain This Project
 
-> **"CoinX is a full-stack cryptocurrency trading platform I built using Spring Boot and React. It simulates a real exchange like Binance where users can sign up, browse live coin markets via CoinGecko API, buy and sell crypto, manage a wallet, and track their portfolio. The backend is a layered Spring Boot REST API secured with JWT authentication, Spring Security, and optional two-factor authentication. For payments, I integrated both Stripe and Razorpay gateways. The frontend is a React SPA with Redux for state management and Tailwind CSS for styling. The platform also has an admin panel where administrators can approve or decline user withdrawal requests. Altogether, it covers authentication, authorization, real-time market data, order processing, wallet management, payment integration, and admin governance — giving me hands-on experience across security, API design, transactional business logic, and external service integration."**
+"So I built a crypto trading platform — think of it as a simpler version of Binance. The backend is Spring Boot, frontend is React. Users can sign up, browse live coin data (pulled from CoinGecko), buy and sell crypto, manage their wallet, and track their portfolio. I integrated Stripe and Razorpay for wallet top-ups. The whole thing is secured with JWT + optional 2FA. There's also an admin side where admins can approve or reject withdrawal requests. The main thing I focused on was getting the order flow right — when someone buys a coin, the wallet gets debited, the asset gets updated, a transaction log is created, and the order is marked as success — all in one atomic transaction. If anything fails, everything rolls back."
 
 ---
 
-## 🏗️ Project Architecture Overview
+## Architecture at a Glance
 
 ```
-┌──────────────────────────────────────────────────────────────────────┐
-│                        CLIENT (React + Vite)                         │
-│  React Router │ Redux Store │ Axios │ Tailwind CSS │ Radix UI        │
-└─────────────────────────────┬────────────────────────────────────────┘
-                              │ REST API (JSON over HTTPS)
-┌─────────────────────────────▼────────────────────────────────────────┐
-│                   SPRING BOOT BACKEND (:5454)                        │
-│                                                                      │
-│  ┌─────────────┐   ┌──────────────────┐   ┌──────────────────────┐  │
-│  │ JWT Filter   │──▶│  12 Controllers  │──▶│  13 Service Interfaces│  │
-│  │ (Security)   │   │  (REST Endpoints)│   │  16 Implementations   │  │
-│  └─────────────┘   └──────────────────┘   └──────────┬───────────┘  │
-│                                                       │              │
-│                     ┌─────────────────────────────────▼──────────┐   │
-│                     │  JPA Repositories  →  MySQL Database       │   │
-│                     │  (17 Entity Models)                        │   │
-│                     └───────────────────────────────────────────┘   │
-└──────────────────────────────────────────────────────────────────────┘
+React (Vite) ──Axios──▶ Spring Boot API ──JPA──▶ MySQL
                               │
-         ┌────────────────────┼─────────────────────┐
-         ▼                    ▼                     ▼
-   ┌──────────┐      ┌──────────────┐      ┌──────────────┐
-   │ CoinGecko│      │Stripe/Razorpay│      │ Gemini AI    │
-   │ (Market) │      │ (Payments)    │      │ (Chatbot)    │
-   └──────────┘      └──────────────┘      └──────────────┘
+              ┌───────────────┼───────────────┐
+              ▼               ▼               ▼
+         CoinGecko      Stripe/Razorpay    Gemini AI
+        (market data)    (payments)        (chatbot)
 ```
 
-### Key Technical Numbers
-| Component | Count |
-|---|---|
-| REST Controllers | 12 (Auth, Coin, Order, Wallet, Watchlist, Withdrawal, Payment, User, etc.) |
-| Service Interfaces | 13 |
-| Service Implementations | 16 (includes EmailService, DataInitializationComponent) |
-| Entity Models | 17 (User, Wallet, Order, OrderItem, Coin, Asset, Withdrawal, etc.) |
-| Config Classes | 5 (AppConfig, JwtProvider, JwtTokenValidator, JwtConstant, OAuth2SuccessHandler) |
-| Redux Slices | 7 (Auth, Coin, Order, Wallet, Watchlist, Withdrawal, Assets) |
-| External Integrations | 4 (CoinGecko, Stripe, Razorpay, Gemini AI) |
-
-### Key Modules Explained
-
-| Module | What It Does |
-|---|---|
-| **Authentication** | Signup, signin, JWT token issuance, 2FA via OTP email, OAuth2 Google login, password reset |
-| **Coin/Market** | Fetches live coin data from CoinGecko API — listing, search, trending, charts |
-| **Order Processing** | BUY/SELL order lifecycle — validates wallet balance or asset quantity, creates order, updates wallet & asset atomically using `@Transactional` |
-| **Wallet** | Stores user balance, supports top-up (via Stripe/Razorpay), wallet-to-wallet transfer, withdrawal requests, and full transaction history |
-| **Withdrawal** | User creates withdrawal request → status set to PENDING → Admin approves/declines → wallet balance adjusted accordingly |
-| **Watchlist** | Users can add/remove coins to a personal watchlist for quick tracking |
-| **Chatbot** | AI-powered coin query assistance using Google Gemini API |
+**Backend**: 12 controllers, 13 service interfaces, 17 entity models, JWT + Spring Security  
+**Frontend**: 7 Redux slices, React Router, Axios with interceptors, Tailwind CSS
 
 ---
 
-## 📋 20 Interview Questions & Answers
+## 20 Questions & Answers
 
 ---
 
-### 🔐 Security & Authentication (Q1–Q5)
+### Q1. How does authentication work?
+
+It's JWT-based. User signs in → `AuthController` checks password using BCrypt → on success, `JwtProvider` builds a JWT with the user's email and roles as claims, signs it with HMAC-SHA, sets 24h expiry, and sends it back. Frontend stores it in Redux and attaches it to every Axios request via the Authorization header. On the backend, there's a `JwtTokenValidator` filter (added before BasicAuthenticationFilter) that intercepts all requests, parses the token, pulls out the email and roles, and sets the security context. No sessions on the server — completely stateless.
 
 ---
 
-**Q1. How does authentication work in your project?**
+### Q2. How did you do Two-Factor Authentication?
 
-I use stateless JWT-based authentication. When a user signs in, the `AuthController` validates credentials using Spring Security's `AuthenticationManager` and BCrypt password comparison. On success, `JwtProvider.generateToken()` creates a JWT token with claims for the user's email and authorities, signed with an HMAC-SHA key, and sets a 24-hour expiration. This token is returned to the frontend and stored in Redux. For every subsequent API call, the React app sends this token in the `Authorization` header. On the backend, `JwtTokenValidator` — a custom `OncePerRequestFilter` added before `BasicAuthenticationFilter` in the security chain — intercepts every request, extracts and verifies the JWT, loads the user's email and roles from the claims, and sets a `UsernamePasswordAuthenticationToken` in the `SecurityContextHolder`. This makes the session completely stateless — no server-side session storage is needed, which improves horizontal scalability.
-
----
-
-**Q2. How did you implement Two-Factor Authentication (2FA)?**
-
-2FA is implemented as an optional security layer using email-based OTP. When a user enables 2FA from their profile, the `TwoFactorAuth` embedded object in the `User` entity is updated to mark 2FA as active. During login, if 2FA is enabled, the initial signin does not return a final JWT. Instead, it generates a random 6-digit OTP, stores it in the `TwoFactorOTP` entity along with a deferred JWT, and sends the OTP to the user's email via the `EmailService` (using Spring Mail with SMTP). The user then submits the OTP to `/auth/verify-otp`, which checks the OTP against the stored record. If valid, the deferred JWT is returned, completing the login. This adds a second factor without requiring a third-party authenticator app — it uses the email channel the user already verified.
+It's email OTP based. When a user turns on 2FA, their `User` entity gets a `TwoFactorAuth` embedded object flagged as active. Next time they log in, instead of getting a JWT right away, the backend generates a 6-digit OTP, saves it in the `TwoFactorOTP` table along with a "deferred" JWT, and emails the OTP via Spring Mail. User submits the OTP to `/auth/verify-otp` — if it matches, they get the JWT. If it doesn't match or expires, login fails. Simple but effective, and doesn't need any third-party authenticator app.
 
 ---
 
-**Q3. How does Spring Security filter chain work in your application?**
+### Q3. Walk me through the Spring Security config.
 
-In `AppConfig.java`, I configure the `SecurityFilterChain` bean. The session policy is set to `STATELESS` since I use JWT. I define authorization rules where all `/api/**` endpoints require authentication, while other endpoints (like `/auth/**`) are permitted for all. I add my custom `JwtTokenValidator` filter before `BasicAuthenticationFilter` in the chain using `addFilterBefore()`. CSRF is disabled because the app is stateless and uses token-based auth instead of cookies. For CORS, I configure allowed origins (localhost:3000, 5173, 5174, and the deployed Vercel URL), allow all methods and headers, expose the `Authorization` header, and set credentials to true. I also integrate OAuth2 login with a custom `OAuth2SuccessHandler` that generates a JWT after successful Google authentication and redirects the user to the frontend with the token.
-
----
-
-**Q4. How do you handle password security?**
-
-Passwords are never stored in plain text. I use BCrypt hashing via Spring Security's `BCryptPasswordEncoder`, which is configured as a `@Bean` in `AppConfig`. When a user signs up, the raw password is encoded using `passwordEncoder.encode()` before persisting to the database. During login, Spring Security's `DaoAuthenticationProvider` automatically compares the submitted password with the stored hash using BCrypt's built-in `matches()` method, which handles the salt comparison internally. BCrypt is a one-way adaptive hash function — it includes a built-in salt and a configurable work factor, making brute-force attacks computationally expensive. Even if the database is compromised, the passwords remain protected because BCrypt hashes are irreversible.
+In `AppConfig.java` — I set session policy to `STATELESS` since we use JWT, not cookies. All `/api/**` routes require authentication, everything else (like `/auth/**`) is open. My custom `JwtTokenValidator` filter sits before `BasicAuthenticationFilter` in the chain. CSRF is disabled (makes sense for a stateless token-based API). CORS is configured to allow the React dev server origins (localhost:5173, 3000) plus the deployed Vercel URL. OAuth2 login is wired up with a custom `OAuth2SuccessHandler` that generates a JWT after Google login and redirects to the frontend with the token in the URL.
 
 ---
 
-**Q5. How does OAuth2 Google Login work in your project?**
+### Q4. How do you store passwords?
 
-I configured OAuth2 login in Spring Security using `oauth2Login()` in the security filter chain. The OAuth2 client credentials (Google client ID and secret) are defined in `application.properties`. When a user clicks "Login with Google" on the frontend, they're redirected to Google's authorization server via the `/login/oauth2/authorization/google` endpoint. After the user grants consent, Google redirects back with an authorization code. Spring Security exchanges this code for an access token, retrieves the user profile, and calls my custom `OAuth2SuccessHandler`. This handler checks if the user already exists in the database by email — if not, it creates a new user record. Then it generates a JWT using `JwtProvider.generateToken()` and redirects the user to the React frontend URL with the JWT as a query parameter. The frontend captures this token and stores it in Redux for subsequent API calls.
-
----
-
-### 💰 Trading & Business Logic (Q6–Q10)
+BCrypt, through Spring Security's `BCryptPasswordEncoder` (configured as a bean). When someone signs up, the raw password goes through `passwordEncoder.encode()` before hitting the database. During login, Spring's `DaoAuthenticationProvider` handles the comparison internally — BCrypt has a built-in salt, so each hash is unique even for the same password. If the DB gets compromised, attackers still can't reverse the hashes. Pretty standard stuff, but it works.
 
 ---
 
-**Q6. Explain the order processing flow for a BUY order.**
+### Q5. How does the Google OAuth2 login flow work?
 
-When a user places a BUY order, the `OrderController` receives the request with the coin ID, quantity, and order type. The service layer's `processOrder()` method delegates to `buyAsset()`. First, it validates that the quantity is greater than zero. Then it fetches the coin's current market price from the database (which was previously synced from CoinGecko). It creates an `OrderItem` entity linking the coin, quantity, and buy price. Next, it creates an `Order` entity with status `PENDING`. The critical step is calling `walletService.payOrderPayment(order, user)`, which checks if the user's wallet has sufficient balance, deducts the order amount, and creates a `WalletTransaction` record. If the wallet has insufficient funds, it throws an exception and the entire transaction rolls back thanks to the `@Transactional` annotation. After payment succeeds, the order status is updated to `SUCCESS`, and the `AssetService` either creates a new `Asset` record or increments the quantity on an existing one. This entire flow is atomic — if any step fails, everything rolls back.
-
----
-
-**Q7. How does the SELL order differ from BUY?**
-
-The SELL flow in `sellAsset()` works differently from BUY. Instead of checking wallet balance, it first verifies that the user actually holds the asset by querying `AssetService.findAssetByUserIdAndCoinId()`. If the asset exists and the user has sufficient quantity, it creates an `OrderItem` with the original buy price and the current sell price. Then it creates the order and calls `walletService.payOrderPayment()` — but this time the payment method credits the wallet instead of debiting it, since it's a SELL. The asset quantity is decremented using `assetService.updateAsset(id, -quantity)`. There's also a cleanup check: if the remaining asset value falls below 1 unit of currency (due to fractional quantities), the asset record is deleted entirely to avoid dust holdings. If the user doesn't have enough quantity to sell, the order is rolled back and an exception is thrown.
+User clicks "Login with Google" → browser goes to `/login/oauth2/authorization/google` → Google shows consent screen → on approval, Google redirects back with an auth code → Spring Security exchanges it for an access token and fetches the user profile. My `OAuth2SuccessHandler` kicks in here — it checks if this email already exists in the DB. If not, it creates a new user. Then it generates a JWT and redirects back to the React app with the token as a query param. Frontend picks it up and stores it in Redux.
 
 ---
 
-**Q8. How do you ensure data consistency during order processing?**
+### Q6. Explain the BUY order flow.
 
-Data consistency is ensured through Spring's `@Transactional` annotation on the `buyAsset()`, `sellAsset()`, and `processOrder()` methods in `OrderServiceImplementation`. This means the entire order flow — creating the order, debiting/crediting the wallet, creating the wallet transaction log, and updating asset holdings — happens within a single database transaction. If any step throws an exception (e.g., insufficient balance, asset not found, database error), Spring's transaction manager automatically rolls back all changes. This prevents partial states like an order being marked as SUCCESS but the wallet not being debited, or assets being incremented without a corresponding wallet deduction. I use JPA with MySQL's InnoDB engine which supports ACID transactions, ensuring atomicity, consistency, isolation, and durability for all order operations.
-
----
-
-**Q9. How does the wallet system work?**
-
-The `Wallet` entity has a one-to-one relationship with `User` and stores the current balance as a `BigDecimal`. The `WalletService` exposes several operations: `payOrderPayment()` handles BUY/SELL by debiting or crediting based on order type; `addBalanceToWallet()` tops up the wallet after Stripe/Razorpay payment verification; `transferFunds()` enables user-to-user wallet transfers by debiting the sender and crediting the receiver in a single transaction; and withdrawal requests debit the wallet. Every wallet mutation creates a `WalletTransaction` record with the transaction type (BUY, SELL, DEPOSIT, WITHDRAWAL, TRANSFER), amount, timestamp, and purpose. This provides a full audit trail. The `WalletTransactionService` lets users query their complete transaction history. I use `BigDecimal` instead of `double` for the balance field to avoid floating-point precision issues that are critical in financial applications.
+Request comes in with coinId, quantity, and orderType=BUY. First, the service grabs the coin's current price. It creates an `OrderItem` (linking coin, quantity, buy price) and an `Order` (status: PENDING). Then it calls `walletService.payOrderPayment()` — this checks if the wallet has enough balance, deducts the amount, and logs a `WalletTransaction`. If balance is short, exception gets thrown and `@Transactional` rolls everything back. After payment goes through, order status flips to SUCCESS. Then `AssetService` either creates a new asset record or bumps the quantity on an existing one. Five DB writes, one transaction — all or nothing.
 
 ---
 
-**Q10. How do you handle payment gateway integration?**
+### Q7. How is SELL different from BUY?
 
-I integrated two payment gateways — Stripe and Razorpay — through the `PaymentService`. When a user wants to top up their wallet, the frontend sends a request with the amount and preferred payment method. For Stripe, the backend creates a Stripe Checkout Session using the Stripe Java SDK, setting the amount, currency, success URL, and cancel URL, then returns the session URL to the frontend for redirection. For Razorpay, it creates a Razorpay Order using the Razorpay Java SDK and returns the order ID. After the user completes payment on the gateway's hosted page, the callback hits the backend's confirmation endpoint. The `PaymentController` verifies the payment status, and on success, calls `walletService.addBalanceToWallet()` to credit the user's wallet and creates a `PaymentOrder` entity tracking the payment status. This dual-gateway approach gives users flexibility and reduces dependency on a single provider.
-
----
-
-### 🏛️ Architecture & Design (Q11–Q15)
+BUY checks wallet balance; SELL checks if the user actually owns enough of that coin. `sellAsset()` looks up the asset via `findAssetByUserIdAndCoinId()`. If they have enough quantity, it creates the order, calls `walletService.payOrderPayment()` (which credits the wallet this time since it's a SELL), and decrements the asset quantity. There's a neat cleanup — if after selling, the remaining asset value drops below 1 (dust), it deletes the asset record entirely. If the user tries to sell more than they own, the order gets deleted and an exception is thrown.
 
 ---
 
-**Q11. Explain the layered architecture of your backend.**
+### Q8. How do you keep data consistent during trades?
 
-The backend follows a classic 3-tier layered architecture. The **Controller layer** (12 controllers) handles HTTP request mapping, input validation, and response formatting — it never contains business logic. The **Service layer** (13 interfaces with 16 implementations) encapsulates all business logic like order processing rules, wallet validation, and payment orchestration. I use interfaces for all services (e.g., `OrderService` interface → `OrderServiceImplementation`) which enables loose coupling, testability, and easy swapping of implementations. The **Repository layer** uses Spring Data JPA repositories extending `JpaRepository`, providing CRUD and custom query methods without boilerplate code. Dependencies flow strictly downward: Controllers depend on Services (injected via `@Autowired` constructor injection), and Services depend on Repositories. This separation means I can modify business rules without touching controllers, or change the database layer without affecting service logic.
-
----
-
-**Q12. How do you manage state on the frontend?**
-
-I use Redux with Redux Toolkit for centralized state management. The store is organized into 7 feature slices: `AuthSlice` (user profile, JWT token, login/signup state), `CoinSlice` (coin list, coin details, charts, trending), `OrderSlice` (order history, order status), `WalletSlice` (balance, transactions), `WatchlistSlice` (user's watchlist), `WithdrawalSlice` (withdrawal requests), and `AssetSlice` (portfolio holdings). Each slice uses `createAsyncThunk` for async API calls, which automatically dispatches pending/fulfilled/rejected actions. The JWT token is stored in the Auth slice and attached to every Axios request via an interceptor in `api.js`. I also implemented a refresh token mechanism — when a 401 response is received, the Axios interceptor automatically attempts to refresh the access token before retrying the failed request. React Router handles client-side routing with protected routes that check Redux auth state before allowing access.
+`@Transactional` on `buyAsset()`, `sellAsset()`, and `processOrder()`. One trade touches five things — order, order item, wallet balance, wallet transaction, and asset. If the wallet debit fails after the order is created, Spring rolls back the order creation too. MySQL's InnoDB handles the actual ACID guarantees underneath. Without this, you'd end up with orders marked SUCCESS but wallets not debited, which in a financial app would be a disaster.
 
 ---
 
-**Q13. How does the frontend communicate with the backend?**
+### Q9. How does the wallet work?
 
-All frontend-to-backend communication uses Axios HTTP client configured in `api.js`. I created a central Axios instance with the base URL pointing to the Spring Boot server. An Axios request interceptor automatically attaches the JWT token from Redux state to the `Authorization` header of every outgoing request. An Axios response interceptor handles 401 errors by attempting automatic token refresh using the stored refresh token — if the refresh succeeds, the original request is retried transparently. All API calls are dispatched through Redux async thunks (e.g., `fetchCoinList`, `placeOrder`, `getWalletBalance`), which manage loading states, success responses, and error handling in the Redux slices. The backend returns JSON responses, and the frontend processes these in the slice reducers to update the store, which in turn re-renders connected React components automatically.
-
----
-
-**Q14. Why did you choose this tech stack?**
-
-I chose Spring Boot for the backend because it provides production-ready features out of the box — embedded server, auto-configuration, Spring Security for authentication/authorization, Spring Data JPA for database abstraction, and excellent ecosystem support for integrating Stripe, Razorpay, and email services. Java's strong typing and Spring's dependency injection make the codebase maintainable as it grows. For the frontend, I chose React because of its component-based architecture, virtual DOM for performance, and the massive ecosystem. Redux provides predictable state management which is critical for a trading app where wallet balances, order statuses, and portfolio data must stay synchronized. Vite is the build tool for its fast HMR (Hot Module Replacement) during development. Tailwind CSS gives utility-first styling without context-switching to CSS files. MySQL was chosen because trading platforms require ACID-compliant transactions for financial data integrity.
+Each user gets a `Wallet` (one-to-one with `User`) on signup. Balance is stored as `BigDecimal` — not `double`, because floating point math and money don't mix well. The wallet supports: pay for orders (BUY debits, SELL credits), top-up via Stripe/Razorpay, transfer to another user's wallet, and withdrawals. Every single mutation creates a `WalletTransaction` with the type, amount, purpose, and date — so there's a complete audit trail. Users can pull up their full transaction history from the `WalletTransactionService`.
 
 ---
 
-**Q15. How did you handle CORS in your application?**
+### Q10. Tell me about the payment gateway integration.
 
-CORS (Cross-Origin Resource Sharing) is configured in `AppConfig.java` using a `CorsConfigurationSource` bean. Since the React frontend runs on a different port (5173) than the Spring Boot backend (5454), browsers block cross-origin requests by default. I configured allowed origins to include `localhost:3000`, `localhost:5173`, `localhost:5174`, `localhost:4200`, and the deployed Vercel URL. I allow all HTTP methods and headers using wildcard, set `allowCredentials` to true so cookies and auth headers are sent, and explicitly expose the `Authorization` header so the frontend can read JWT tokens from responses. The configuration is registered for all paths using `/**`. The `maxAge` is set to 3600 seconds to cache preflight responses, reducing the number of OPTIONS requests the browser makes.
-
----
-
-### 📊 Database & Data Design (Q16–Q18)
+I plugged in both Stripe and Razorpay. For Stripe — backend creates a Checkout Session via the Stripe Java SDK (amount, currency, success/cancel URLs), returns the session URL, frontend redirects user there. For Razorpay — backend creates an order via Razorpay SDK, returns the order ID, frontend opens the Razorpay widget. After user pays, the callback hits the backend, `PaymentController` verifies the status, and on success calls `walletService.addBalanceToWallet()`. Having two gateways is nice because if one has issues, users have a fallback.
 
 ---
 
-**Q16. Explain your database schema and key relationships.**
+### Q11. Describe the backend architecture.
 
-The database has 17 entities centered around the `User` entity. `User` has a one-to-one relationship with `Wallet` (every user gets a wallet on signup) and `Watchlist`. It has one-to-many relationships with `Order`, `Asset`, `Withdrawal`, `PaymentOrder`, `VerificationCode`, `ForgotPasswordToken`, and `TwoFactorOTP`. The `Wallet` entity has a one-to-many relationship with `WalletTransaction` for audit logging. Each `Order` has a one-to-one `OrderItem`, and `OrderItem` references a `Coin` entity. The `Asset` entity also references `Coin`, forming a many-to-one relationship. I use JPA annotations (`@OneToOne`, `@OneToMany`, `@ManyToOne`, `@Embedded`) for ORM mapping. The `TwoFactorAuth` is an `@Embeddable` class inside `User` rather than a separate table, since it's a value object that always belongs to one user. I use `BigDecimal` for monetary fields and `LocalDateTime` for timestamps to ensure precision.
-
----
-
-**Q17. How do you handle database migrations and initialization?**
-
-I use Spring Data JPA with `spring.jpa.hibernate.ddl-auto=update`, which automatically creates and alters tables based on entity changes during development. For initial data seeding, I have a `DataInitializationComponent` — a Spring `@Component` that implements `CommandLineRunner` or uses `@PostConstruct` to populate essential reference data when the application starts. In production, best practice would be to switch to a migration tool like Flyway or Liquibase for version-controlled schema changes. The MySQL database uses InnoDB engine by default, which provides row-level locking and ACID transactions — critical for the financial operations. All entity IDs use auto-increment `BIGINT` primary keys generated via `@GeneratedValue(strategy = GenerationType.AUTO)`, and I use `@Column` annotations for constraints like `nullable`, `unique`, and `length`.
+Standard 3-layer. Controllers handle HTTP (request mapping, validation, response) — no business logic here. Services hold all the logic (order rules, wallet checks, payment orchestration). Repositories are Spring Data JPA interfaces — just declare methods and JPA generates the queries. All services are coded to interfaces (e.g., `OrderService` → `OrderServiceImplementation`) so things stay loosely coupled. Dependencies go one way: Controller → Service → Repository. If I need to change how orders work, I only touch the service layer.
 
 ---
 
-**Q18. How do you handle the Coin data and market prices?**
+### Q12. How do you manage frontend state?
 
-The `Coin` entity stores cached market data including `id` (slug like "bitcoin"), `symbol`, `name`, `currentPrice`, `marketCap`, `high24h`, `low24h`, and other market metrics. The `CoinServiceImpl` fetches live data from the CoinGecko API using REST calls. It supports listing coins with pagination, fetching individual coin details, searching by keyword, retrieving trending coins, and pulling chart data for different time ranges. When an order is placed, the coin's `currentPrice` at that moment is captured in the `OrderItem` as the `buyPrice` or `sellPrice`, creating a snapshot of the trade price. This is important because crypto prices change rapidly — the stored price in the `OrderItem` reflects the exact price at trade execution time, not the current live price, ensuring accurate profit/loss calculations in the portfolio view.
-
----
-
-### 🚀 DevOps & Real-World Scenarios (Q19–Q20)
+Redux with 7 slices — Auth, Coin, Order, Wallet, Watchlist, Withdrawal, Assets. Each slice uses `createAsyncThunk` for API calls, which gives me pending/fulfilled/rejected states for free. The JWT lives in the Auth slice. I set up an Axios interceptor that grabs the token from Redux and sticks it in the Authorization header for every request. There's also a response interceptor — if a 401 comes back, it tries to refresh the token automatically before retrying the request. React Router handles routing with protected routes that check auth state.
 
 ---
 
-**Q19. What challenges did you face and how did you solve them?**
+### Q13. How do frontend and backend talk to each other?
 
-One major challenge was **ensuring transactional consistency** during order processing. A BUY order involves five database mutations — creating the order, order item, wallet transaction, updating wallet balance, and updating/creating asset holdings. If any step failed midway (e.g., balance check passed but DB write failed), it could leave the system in an inconsistent state. I solved this by wrapping the entire flow in `@Transactional`, ensuring atomic rollback on failure. Another challenge was **handling CORS** between React (port 5173) and Spring Boot (port 5454) — I had to carefully configure allowed origins, headers, and expose the Authorization header. A third challenge was **integrating two different payment gateways** (Stripe and Razorpay) which have completely different APIs and callback mechanisms. I abstracted the payment logic behind a common `PaymentService` interface, so the wallet top-up flow is gateway-agnostic.
-
----
-
-**Q20. How would you scale this application for production?**
-
-For production scaling, I would implement several improvements. **Horizontal scaling**: Since the backend is stateless (JWT-based, no server sessions), I can run multiple instances behind a load balancer. **Caching**: I'd add Redis to cache frequently accessed data like coin prices and user profiles, reducing database load. **Message Queue**: For order processing, I'd introduce RabbitMQ or Kafka to decouple order submission from processing, handling traffic spikes gracefully. **Database**: I'd implement read replicas for MySQL to separate read-heavy operations (coin listing, portfolio view) from write operations (orders, wallet updates). **Containerization**: I'd Dockerize both frontend and backend, use Docker Compose for local development, and deploy to Kubernetes for orchestration. **CI/CD**: I'd set up GitHub Actions for automated testing and deployment. **Monitoring**: I'd add Spring Boot Actuator endpoints, Prometheus for metrics collection, and Grafana dashboards for real-time monitoring. **Security hardening**: I'd implement Stripe webhook signature verification, rate limiting on auth endpoints, and audit logging for all financial operations.
+Axios. I have a central instance in `api.js` with the base URL pointing to the Spring Boot server. Request interceptor attaches JWT, response interceptor handles 401s with auto-refresh. All API calls go through Redux thunks — `fetchCoinList`, `placeOrder`, `getWalletBalance`, etc. Backend returns JSON, thunks dispatch the response to reducers, reducers update the store, connected components re-render. Pretty standard React-Redux data flow, nothing fancy.
 
 ---
 
-## 💡 Quick Tips for the Interview
+### Q14. Why this tech stack?
 
-1. **Start with the big picture** — explain it as a "full-stack crypto trading platform with Spring Boot + React"
-2. **Emphasize the order flow** — it touches 5 entities in one transaction, showing your understanding of ACID
-3. **Talk about security layers** — JWT + 2FA + OAuth2 + BCrypt shows depth
-4. **Mention external integrations** — CoinGecko, Stripe, Razorpay, Gemini show real-world API experience
-5. **Highlight architecture decisions** — layered architecture, interface-based services, Redux state management
-6. **Be ready to draw the flow** — User → React → Axios → JWT Filter → Controller → Service → Repository → MySQL
-7. **Know your numbers** — 12 controllers, 17 entities, 7 Redux slices, 4 external APIs
+Spring Boot because it gives you a lot out of the box — embedded Tomcat, auto-config, Spring Security, JPA, and good library support for Stripe/Razorpay SDKs. Java's typing catches bugs at compile time which matters when you're dealing with money. React for the component model and ecosystem. Redux because a trading app has a lot of interconnected state — wallet balance, order status, portfolio — and you need one source of truth. Vite for fast dev server. MySQL because I need real transactions (ACID) for financial operations — NoSQL wouldn't cut it here. Tailwind because I didn't want to maintain separate CSS files.
 
 ---
 
-> **Good luck with your interview! 🚀**
+### Q15. How did you handle CORS?
+
+In `AppConfig.java`. React runs on port 5173, backend on 5454 — different origins, so browsers block requests by default. I set up a `CorsConfigurationSource` that whitelists localhost:3000, 5173, 5174, 4200, and the Vercel deployment URL. All methods and headers are allowed, credentials are set to true (so the Authorization header gets sent), and the Authorization header is explicitly exposed in the response. `maxAge` is 3600 seconds so the browser caches preflight responses instead of sending OPTIONS before every request.
+
+---
+
+### Q16. Explain the database design.
+
+17 tables, all revolving around `User`. One-to-one with `Wallet`, `Watchlist`, and `PaymentDetails`. One-to-many with `Order`, `Asset`, `Withdrawal`, `PaymentOrder`, `VerificationCode`, etc. `Order` has a one-to-one `OrderItem`, and `OrderItem` points to a `Coin`. `Asset` also references `Coin`. I embedded `TwoFactorAuth` inside `User` using `@Embeddable` since it's just a couple of fields, not worth a separate table. Money fields use `BigDecimal`, timestamps use `LocalDateTime`. All IDs are auto-increment BIGINT.
+
+---
+
+### Q17. How do you handle data initialization?
+
+JPA's `ddl-auto=update` handles schema creation — it checks the entity classes and creates/alters tables as needed. There's a `DataInitializationComponent` (Spring `@Component`) that seeds essential data on startup. For a production setup, I'd switch to Flyway for proper migration versioning. The database runs InnoDB which gives row-level locking and proper transaction support.
+
+---
+
+### Q18. How do you handle coin market data?
+
+`CoinServiceImpl` hits the CoinGecko API for live coin data — listing with pagination, individual coin details, search, trending, and chart data for different time ranges. The data gets stored/cached in the `Coin` entity. When an order is placed, the coin's price at that exact moment gets captured in the `OrderItem` as `buyPrice` or `sellPrice`. This is important because crypto prices move fast — the portfolio needs to know what price you actually traded at, not the current price.
+
+---
+
+### Q19. What were the biggest challenges?
+
+Transaction consistency was the trickiest part. A BUY order modifies five tables — if the wallet update fails after the order is already created, you're in trouble. `@Transactional` solved that, but I had to be careful about where I placed it and making sure exceptions actually propagate up to trigger rollback. CORS was annoying to debug initially — the Authorization header wasn't coming through until I explicitly added it to exposed headers. Integrating two payment gateways with completely different APIs and callback flows took some work too — I ended up abstracting the payment logic so the wallet service doesn't care which gateway was used.
+
+---
+
+### Q20. How would you scale this for production?
+
+Since it's stateless (JWT, no sessions), I can run multiple backend instances behind a load balancer right away. I'd add Redis for caching coin prices and user profiles — those get hit a lot. For order processing, a message queue like RabbitMQ would help handle bursts without blocking. MySQL read replicas would split the load between reads (browsing coins, viewing portfolio) and writes (placing orders). Docker + Kubernetes for deployment. GitHub Actions for CI/CD. Spring Boot Actuator + Prometheus + Grafana for monitoring. On security, I'd add Stripe webhook signature verification, rate limiting on `/auth` endpoints, and proper audit logging.
+
+---
+
+## Quick Reminders Before the Interview
+
+- Lead with the project overview, then dive into specifics when asked
+- The order flow (BUY/SELL) is the most interesting part — know it cold
+- Be ready to draw: User → React → Axios → JWT Filter → Controller → Service → Repository → MySQL
+- If asked "what would you improve" — mention caching, message queues, proper CI/CD, and webhook validation
+- Numbers to remember: 12 controllers, 17 entities, 7 Redux slices, 4 external APIs
