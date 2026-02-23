@@ -12,6 +12,9 @@ target/
 # Spring Boot
 *.log
 backend.log
+**/application.properties
+**/application*.yml
+**/application*.yaml
 
 # Node / React
 node_modules/
