@@ -13,7 +13,7 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 // import { z } from "zod";
 import { useDispatch } from "react-redux";
-import { verifyResetPassowrdOTP } from "@/Redux/Auth/Action";
+import { verifyResetPassowrdOTP } from "@/Redux/Auth/AuthSlice";
 import { useNavigate, useParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import {
@@ -54,7 +54,7 @@ const ResetPasswordForm = () => {
   });
   const onSubmit = (data) => {
     dispatch(
-      verifyResetPassowrdOTP({ otp: data.otp, password: data.password,session , navigate})
+      verifyResetPassowrdOTP({ otp: data.otp, password: data.password, session, navigate })
     );
     console.log("login form", data);
   };

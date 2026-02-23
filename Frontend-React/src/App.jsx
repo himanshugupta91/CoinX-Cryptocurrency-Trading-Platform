@@ -1,28 +1,30 @@
-import Navbar from "./pages/Navbar/Navbar";
-import Home from "./pages/Home/Home";
-import Portfolio from "./pages/Portfilio/Portfolio";
-import Auth from "./pages/Auth/Auth";
 import { Route, Routes } from "react-router-dom";
-import StockDetails from "./pages/StockDetails/StockDetails";
-import Profile from "./pages/Profile/Profile";
-import Notfound from "./pages/Notfound/Notfound";
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect } from "react";
-import { getUser } from "./Redux/Auth/Action";
-import Wallet from "./pages/Wallet/Wallet";
-import Watchlist from "./pages/Watchlist/Watchlist";
-import TwoFactorAuth from "./pages/Auth/TwoFactorAuth";
-import ResetPasswordForm from "./pages/Auth/ResetPassword";
-import PasswordUpdateSuccess from "./pages/Auth/PasswordUpdateSuccess";
-import LoginWithGoogle from "./pages/Auth/LoginWithGoogle.";
-import PaymentSuccess from "./pages/Wallet/PaymentSuccess";
-import Withdrawal from "./pages/Wallet/Withdrawal";
-import PaymentDetails from "./pages/Wallet/PaymentDetails";
-import WithdrawalAdmin from "./Admin/Withdrawal/WithdrawalAdmin";
-import Activity from "./pages/Activity/Activity";
-import SearchCoin from "./pages/Search/Search";
+import { useEffect, Suspense, lazy } from "react";
+import { getUser } from "./Redux/Auth/AuthSlice";
 import { shouldShowNavbar } from "./Util/shouldShowNavbar";
-import Footer from "./pages/Footer/Footer";
+import { Toaster } from "@/components/ui/toaster";
+
+const Navbar = lazy(() => import("./pages/Navbar/Navbar"));
+const Home = lazy(() => import("./pages/Home/Home"));
+const Portfolio = lazy(() => import("./pages/Portfilio/Portfolio"));
+const Auth = lazy(() => import("./pages/Auth/Auth"));
+const StockDetails = lazy(() => import("./pages/StockDetails/StockDetails"));
+const Profile = lazy(() => import("./pages/Profile/Profile"));
+const Notfound = lazy(() => import("./pages/Notfound/Notfound"));
+const Wallet = lazy(() => import("./pages/Wallet/Wallet"));
+const Watchlist = lazy(() => import("./pages/Watchlist/Watchlist"));
+const TwoFactorAuth = lazy(() => import("./pages/Auth/TwoFactorAuth"));
+const ResetPasswordForm = lazy(() => import("./pages/Auth/ResetPassword"));
+const PasswordUpdateSuccess = lazy(() => import("./pages/Auth/PasswordUpdateSuccess"));
+const LoginWithGoogle = lazy(() => import("./pages/Auth/LoginWithGoogle"));
+const AuthCallback = lazy(() => import("./pages/Auth/AuthCallback"));
+const Withdrawal = lazy(() => import("./pages/Wallet/Withdrawal"));
+const PaymentDetails = lazy(() => import("./pages/Wallet/PaymentDetails"));
+const WithdrawalAdmin = lazy(() => import("./Admin/Withdrawal/WithdrawalAdmin"));
+const Activity = lazy(() => import("./pages/Activity/Activity"));
+const SearchCoin = lazy(() => import("./pages/Search/Search"));
+const Footer = lazy(() => import("./pages/Footer/Footer"));
 
 
 const routes = [
@@ -52,44 +54,48 @@ function App() {
 
   return (
     <>
-      {" "}
-      {auth.user ? (
-        <>
-          {showNavbar && <Navbar />}
-          <Routes>
-            <Route element={<Home />} path="/" />
+      <Suspense fallback={<div>Loading...</div>}>
+        {auth.user ? (
+          <>
+            {showNavbar && <Navbar />}
+            <Routes>
+              <Route element={<Home />} path="/" />
 
-            <Route element={<Portfolio />} path="/portfolio" />
-            <Route element={<Activity />} path="/activity" />
-            <Route element={<Wallet />} path="/wallet" />
-            <Route element={<Withdrawal />} path="/withdrawal" />
-            <Route element={<PaymentDetails />} path="/payment-details" />
-            <Route element={<Wallet />} path="/wallet/:order_id" />
-            <Route element={<StockDetails />} path="/market/:id" />
-            <Route element={<Watchlist />} path="/watchlist" />
-            <Route element={<Profile />} path="/profile" />
-            <Route element={<SearchCoin />} path="/search" />
-            {auth.user.role == "ROLE_ADMIN" && <Route element={<WithdrawalAdmin />} path="/admin/withdrawal" />}
-            <Route element={<Notfound />} path="*" />
+              <Route element={<Portfolio />} path="/portfolio" />
+              <Route element={<Activity />} path="/activity" />
+              <Route element={<Wallet />} path="/wallet" />
+              <Route element={<Withdrawal />} path="/withdrawal" />
+              <Route element={<PaymentDetails />} path="/payment-details" />
+              <Route element={<Wallet />} path="/wallet/:order_id" />
+              <Route element={<StockDetails />} path="/market/:id" />
+              <Route element={<Watchlist />} path="/watchlist" />
+              <Route element={<Profile />} path="/profile" />
+              <Route element={<SearchCoin />} path="/search" />
+              {auth.user.role == "ROLE_ADMIN" && <Route element={<WithdrawalAdmin />} path="/admin/withdrawal" />}
+              <Route element={<Notfound />} path="*" />
 
-          </Routes>
-          <Footer />
-        </>
-      ) : (
-        <>
-          <Routes>
-            <Route element={<Auth />} path="/" />
-            <Route element={<Auth />} path="/signup" />
-            <Route element={<Auth />} path="/signin" />
-            <Route element={<Auth />} path="/forgot-password" />
-            <Route element={<LoginWithGoogle />} path="/login-with-google" />
-            <Route element={<ResetPasswordForm />} path="/reset-password/:session" />
-            <Route element={<PasswordUpdateSuccess />} path="/password-update-successfully" />
-            <Route element={<TwoFactorAuth />} path="/two-factor-auth/:session" />
-            <Route element={<Notfound />} path="*" />
-          </Routes>
-        </>
-      )}
+            </Routes>
+            <Footer />
+          </>
+        ) : (
+          <>
+            <Routes>
+              <Route element={<Auth />} path="/" />
+              <Route element={<Auth />} path="/signup" />
+              <Route element={<Auth />} path="/signin" />
+              <Route element={<Auth />} path="/forgot-password" />
+              <Route element={<LoginWithGoogle />} path="/login-with-google" />
+              <Route element={<AuthCallback />} path="/auth/google/success" />
+              <Route element={<ResetPasswordForm />} path="/reset-password/:session" />
+              <Route element={<PasswordUpdateSuccess />} path="/password-update-successfully" />
+              <Route element={<TwoFactorAuth />} path="/two-factor-auth/:session" />
+              <Route element={<Notfound />} path="*" />
+            </Routes>
+          </>
+        )}
+
+      </Suspense>
+      <Toaster />
     </>
   );
 }

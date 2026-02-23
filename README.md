@@ -42,12 +42,59 @@ A full-stack cryptocurrency trading platform similar to Binance, built with **Sp
 - Admin panel for withdrawals and user management
 
 ---
+## 🏗️ System Design
+
+### Architecture Overview
+The system follows a monolithic architecture built with Spring Boot, communicating with a MySQL database and external APIs.
+
+```mermaid
+graph TD
+    Client[Frontend Client] -->|REST API| LB[Load Balancer / API Gateway]
+    LB --> Backend[Spring Boot Backend]
+    
+    subgraph "Backend Services"
+        Backend --> AuthService[Auth Service]
+        Backend --> WalletService[Wallet Service]
+        Backend --> OrderService[Order Service]
+        Backend --> CoinService[Coin Data Service]
+        Backend --> PaymentService[Payment Service]
+    end
+    
+    Backend -->|JDBC| DB[(MySQL Database)]
+    
+    CoinService -->|REST| CoinGecko[CoinGecko API]
+    PaymentService -->|REST| Stripe[Stripe API]
+    PaymentService -->|REST| Razorpay[Razorpay API]
+    AuthService -->|SMTP| Email[Email Service]
+```
+
+### Database Schema
+The database schema supports user management, transactional integrity, and asset tracking.
+
+```mermaid
+erDiagram
+    User ||--|| Wallet : owns
+    User ||--o{ Order : places
+    User ||--o{ Asset : holds
+    User ||--o{ PaymentOrder : makes
+    User ||--o{ Withdrawal : requests
+    User ||--|| TwoFactorAuth : uses
+    User ||--|| Watchlist : has
+    
+    Wallet ||--o{ WalletTransaction : has_history
+    Order ||--|| OrderItem : contains
+    OrderItem ||--|| Coin : references
+    Asset ||--|| Coin : references
+    Watchlist }|--|{ Coin : tracks
+```
+
+---
 
 ## 🛠️ Technology Stack
 
 ### Backend (Spring Boot)
-- **Framework**: Spring Boot 3.2.4
-- **Language**: Java 17/19
+- **Framework**: Spring Boot 3.4.2
+- **Language**: Java 21
 - **Database**: MySQL
 - **Security**: Spring Security + JWT
 - **Build Tool**: Maven
@@ -329,8 +376,11 @@ spring.security.oauth2.client.registration.google.client-secret=your_google_clie
 ## 🧪 Testing
 
 ### Backend Tests
+Comprehensive unit tests are implemented for key services including `WalletService`, `OrderService`, `AssetService`, `UserService`, `WithdrawalService`, `WatchlistService`, and `PaymentDetailsService`. Mockito is used for mocking dependencies.
+
 ```bash
 cd "Backend-Spring boot"
+# Run all tests
 ./mvnw test
 ```
 

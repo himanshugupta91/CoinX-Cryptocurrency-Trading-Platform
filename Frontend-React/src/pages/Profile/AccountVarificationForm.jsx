@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable react/prop-types */
-import { sendVerificationOtp, verifyOtp } from "@/Redux/Auth/Action";
+import { sendVerificationOtp, verifyOtp } from "@/Redux/Auth/AuthSlice";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,10 +20,10 @@ import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Auth from "../Auth/Auth";
 
-const AccountVarificationForm = ({handleSubmit}) => {
+const AccountVarificationForm = ({ handleSubmit }) => {
   const [value, setValue] = useState("");
   const dispatch = useDispatch();
-  const {auth}=useSelector(store=>store)
+  const { auth } = useSelector(store => store)
 
   const handleOnChange = (e) => {
     console.log(e.target.value);
@@ -38,7 +38,7 @@ const AccountVarificationForm = ({handleSubmit}) => {
     );
   };
 
-  
+
   return (
     <div className="flex justify-center">
       <div className="space-y-5 mt-10 w-full">
@@ -47,14 +47,14 @@ const AccountVarificationForm = ({handleSubmit}) => {
           <p>{auth.user?.email}</p>
           <Dialog>
             <DialogTrigger>
-           
-            <Button
-              onClick={() => handleSendOtp("EMAIL")}
+
+              <Button
+                onClick={() => handleSendOtp("EMAIL")}
               >
                 Sent OTP
               </Button>
-           
-              
+
+
             </DialogTrigger>
             <DialogContent className="">
               <DialogHeader className="">
@@ -64,7 +64,7 @@ const AccountVarificationForm = ({handleSubmit}) => {
               </DialogHeader>
               <div className="py-5 flex gap-10 justify-center items-center">
                 <InputOTP
-                
+
                   value={value}
                   onChange={(value) => setValue(value)}
                   maxLength={6}
@@ -82,9 +82,9 @@ const AccountVarificationForm = ({handleSubmit}) => {
                   </InputOTPGroup>
                 </InputOTP>
                 <DialogClose>
-                  <Button onClick={()=>handleSubmit(value)} className="w-[10rem]">Submit</Button>
+                  <Button onClick={() => handleSubmit(value)} className="w-[10rem]">Submit</Button>
                 </DialogClose>
-                
+
               </div>
             </DialogContent>
           </Dialog>

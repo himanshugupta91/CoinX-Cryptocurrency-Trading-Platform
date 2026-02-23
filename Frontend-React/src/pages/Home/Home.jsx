@@ -1,34 +1,29 @@
 /* eslint-disable no-unused-vars */
-import { useEffect, useRef, useState } from "react";
-import { AssetTable } from "./AssetTable";
+import { useEffect, useState } from "react";
 import { CryptoCard } from "./CryptoCard";
 import { Button } from "@/components/ui/button";
-import StockChart from "../StockDetails/StockChart";
-import {
-  ChevronLeftIcon,
-} from "@radix-ui/react-icons";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ChevronLeftIcon, ChevronRightIcon } from "@radix-ui/react-icons";
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchCoinDetails,
   fetchCoinList,
   fetchTreadingCoinList,
   getTop50CoinList,
-} from "@/Redux/Coin/Action";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-} from "@/components/ui/pagination";
+} from "@/Redux/Coin/CoinSlice";
 import SpinnerBackdrop from "@/components/custome/SpinnerBackdrop";
+import { useTheme } from "@/context/ThemeContext";
+
+import { Input } from "@/components/ui/input";
 
 const Home = () => {
   const dispatch = useDispatch();
   const [page, setPage] = useState(1);
   const [category, setCategory] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
   const { coin, auth } = useSelector((store) => store);
+  const { theme } = useTheme();
+  const isLight = theme === "light";
 
   useEffect(() => {
     dispatch(fetchCoinList(page));
@@ -39,7 +34,6 @@ const Home = () => {
       coinId: "bitcoin",
       jwt: auth.jwt || localStorage.getItem("jwt"),
     }))
-
   }, []);
 
   useEffect(() => {
@@ -50,144 +44,162 @@ const Home = () => {
     }
   }, [category]);
 
-  const handlePageChange = (page) => {
-    setPage(page);
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
   };
 
-
-
   if (coin.loading) {
-    return <SpinnerBackdrop />;
+    return (
+      <div className="min-h-screen animate-fadeIn">
+        <div className="px-4 pt-16 pb-12">
+          <div className="max-w-3xl mx-auto text-center flex flex-col items-center gap-4">
+            <Skeleton className="h-12 w-64 md:w-96 rounded-lg" />
+            <Skeleton className="h-6 w-48 rounded-lg" />
+          </div>
+        </div>
+        <div className="max-w-6xl mx-auto px-4 pb-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+              <div key={i} className="p-4 border rounded-2xl space-y-3">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-10 w-10 rounded-full" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-3 w-16" />
+                  </div>
+                </div>
+                <Skeleton className="h-20 w-full rounded-xl" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (coin.error) {
+    return <div className="min-h-screen flex items-center justify-center text-red-500">Error: {coin.error}</div>;
   }
 
   return (
-    <div className="relative animate-fadeIn">
+    <div className="min-h-screen animate-fadeIn">
       {/* Hero Section */}
-      <div className="px-5 pt-8 pb-6 relative">
-        {/* Gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-r from-pink-300/10 via-cyan-300/10 to-yellow-200/10 blur-3xl"></div>
-
-        <div className="max-w-4xl mx-auto text-center relative z-10">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 animate-slideUp">
-            <span className="gradient-text">Welcome to CoinX</span>
+      <div className="px-4 pt-16 pb-12">
+        <div className="max-w-3xl mx-auto text-center">
+          <h1 className={`text-4xl md:text-5xl font-semibold mb-4 tracking-tight ${isLight ? "text-gray-900" : "text-white"}`}>
+            Cryptocurrency Markets
           </h1>
-          <p className="text-lg text-gray-300 mb-6 max-w-2xl mx-auto animate-fadeIn" style={{ animationDelay: '0.1s' }}>
-            Your premier destination for cryptocurrency trading and market analysis.
-            Track real-time prices, analyze market trends, and make informed trading decisions.
+          <p className={`text-lg max-w-xl mx-auto ${isLight ? "text-gray-600" : "text-neutral-400"}`}>
+            Track real-time prices and make informed trading decisions.
           </p>
-          <div className="flex flex-wrap gap-4 justify-center items-center text-sm text-gray-400 animate-fadeIn" style={{ animationDelay: '0.2s' }}>
-            <div className="flex items-center gap-2 glass-card px-4 py-2 rounded-full hover-lift">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div>
-              <span>Live Market Data</span>
-            </div>
-            <div className="flex items-center gap-2 glass-card px-4 py-2 rounded-full hover-lift">
-              <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse shadow-[0_0_10px_rgba(81,226,245,0.5)]"></div>
-              <span>Real-time Charts</span>
-            </div>
-            <div className="flex items-center gap-2 glass-card px-4 py-2 rounded-full hover-lift">
-              <div className="w-2 h-2 bg-pink-400 rounded-full animate-pulse shadow-[0_0_10px_rgba(255,168,182,0.5)]"></div>
-              <span>Secure Trading</span>
-            </div>
-          </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="w-full">
-          <div className="p-3 flex items-center gap-4 border-b border-purple-500/20">
+      <div className="max-w-6xl mx-auto px-4 pb-16">
+        {/* Category Tabs */}
+        <div className="flex items-center gap-2 mb-8">
+          {["all", "top50"].map((cat) => (
             <Button
-              variant={category == "all" ? "default" : "outline"}
-              onClick={() => setCategory("all")}
-              className={`rounded-full hover-lift ${category == "all" ? "btn-gradient" : "border-purple-500/30"
+              key={cat}
+              variant="ghost"
+              onClick={() => setCategory(cat)}
+              className={`rounded-full px-5 h-9 text-sm font-medium transition-all ${category === cat
+                ? isLight
+                  ? "bg-black text-white hover:bg-gray-800"
+                  : "bg-white text-black hover:bg-neutral-200"
+                : isLight
+                  ? "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                  : "text-neutral-400 hover:text-white hover:bg-neutral-800"
                 }`}
             >
-              All
+              {cat === "all" ? "All Coins" : "Top 50"}
             </Button>
-            <Button
-              variant={category == "top50" ? "default" : "outline"}
-              onClick={() => setCategory("top50")}
-              className={`rounded-full hover-lift ${category == "top50" ? "btn-gradient" : "border-purple-500/30"
-                }`}
-            >
-              Top 50
-            </Button>
-          </div>
+          ))}
+        </div>
 
-          {/* Responsive Grid Layout for Crypto Cards */}
-          <div className="p-5">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 animate-fadeIn">
-              {(category == "all" ? coin.coinList : coin.top50).map((item, index) => (
-                <CryptoCard key={item.id} coin={item} index={index} />
+        {/* Search Bar */}
+        <div className="flex justify-center mb-8">
+          <Input
+            className="w-full max-w-md h-12 rounded-full px-6 bg-transparent border border-gray-300 dark:border-neutral-700 focus:ring-2 focus:ring-violet-500 transition-all font-medium placeholder:text-gray-400"
+            placeholder="Search coins..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+
+        {/* Crypto Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
+          {(category === "all"
+            ? coin.coinList
+            : category === "top50"
+              ? coin.top50
+              : coin.treadingCoin
+          )
+            ?.filter((item) =>
+              item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              item.symbol.toLowerCase().includes(searchTerm.toLowerCase())
+            )
+            .map((item, index) => (
+              <div
+                key={item.id}
+                className="animate-fadeInUp"
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
+                <CryptoCard coin={item} index={index} />
+              </div>
+            ))}
+        </div>
+
+        {/* Pagination */}
+        {category === "all" && (
+          <div className="flex items-center justify-center gap-2 mt-12">
+            <Button
+              variant="ghost"
+              disabled={page === 1}
+              onClick={() => handlePageChange(page - 1)}
+              className={`h-9 px-4 disabled:opacity-30 rounded-lg ${isLight
+                ? "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                : "text-neutral-400 hover:text-white hover:bg-neutral-800"
+                }`}
+            >
+              <ChevronLeftIcon className="h-4 w-4 mr-1" />
+              Previous
+            </Button>
+
+            <div className="flex items-center gap-1">
+              {[1, 2, 3, 4, 5].map((num) => (
+                <Button
+                  key={num}
+                  variant="ghost"
+                  onClick={() => handlePageChange(num)}
+                  className={`h-9 w-9 rounded-lg text-sm font-medium ${page === num
+                    ? isLight
+                      ? "bg-black text-white"
+                      : "bg-white text-black"
+                    : isLight
+                      ? "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                      : "text-neutral-400 hover:text-white hover:bg-neutral-800"
+                    }`}
+                >
+                  {num}
+                </Button>
               ))}
             </div>
-          </div>
 
-          {category == "all" && (
-            <Pagination className="border-t border-purple-500/20 py-3">
-              <PaginationContent>
-                <PaginationItem>
-                  <Button
-                    variant="ghost"
-                    disabled={page == 1}
-                    onClick={() => handlePageChange(page - 1)}
-                    className="hover-lift"
-                  >
-                    <ChevronLeftIcon className="h-4 w-4 mr-1" />
-                    Previous
-                  </Button>
-                </PaginationItem>
-                <PaginationItem>
-                  <PaginationLink
-                    onClick={() => handlePageChange(1)}
-                    isActive={page == 1}
-                    className="hover-lift"
-                  >
-                    1
-                  </PaginationLink>
-                </PaginationItem>
-                <PaginationItem>
-                  <PaginationLink
-                    onClick={() => handlePageChange(2)}
-                    isActive={page == 2}
-                    className="hover-lift"
-                  >
-                    2
-                  </PaginationLink>
-                </PaginationItem>
-                <PaginationItem>
-                  <PaginationLink
-                    onClick={() => handlePageChange(3)}
-                    isActive={page == 3}
-                    className="hover-lift"
-                  >
-                    3
-                  </PaginationLink>
-                </PaginationItem>
-                {page > 3 && (
-                  <PaginationItem>
-                    <PaginationLink
-                      onClick={() => handlePageChange(3)}
-                      isActive
-                      className="hover-lift"
-                    >
-                      {page}
-                    </PaginationLink>
-                  </PaginationItem>
-                )}
-                <PaginationItem>
-                  <PaginationEllipsis />
-                </PaginationItem>
-                <PaginationItem>
-                  <PaginationNext
-                    className="cursor-pointer hover-lift"
-                    onClick={() => handlePageChange(page + 1)}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          )}
-        </div>
+            <Button
+              variant="ghost"
+              onClick={() => handlePageChange(page + 1)}
+              className={`h-9 px-4 rounded-lg ${isLight
+                ? "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                : "text-neutral-400 hover:text-white hover:bg-neutral-800"
+                }`}
+            >
+              Next
+              <ChevronRightIcon className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,25 +1,23 @@
-import {applyMiddleware, combineReducers, legacy_createStore} from "redux"
-import {thunk} from "redux-thunk";
-import authReducer from "./Auth/Reducer";
-import coinReducer from "./Coin/Reducer";
-import walletReducer from "./Wallet/Reducer";
-import orderReducer from "./Order/Reducer";
-import assetReducer from "./Assets/Reducer";
-import watchlistReducer from "./Watchlist/Reducer";
-import withdrawalReducer from "./Withdrawal/Reducer";
-import chatBotReducer from "./Chat/Reducer";
+import { configureStore } from "@reduxjs/toolkit";
+import { thunk } from "redux-thunk";
+import authReducer from "./Auth/AuthSlice";
+import coinReducer from "./Coin/CoinSlice";
+import walletReducer from "./Wallet/WalletSlice";
+import orderReducer from "./Order/OrderSlice";
+import assetReducer from "./Assets/AssetSlice";
+import watchlistReducer from "./Watchlist/WatchlistSlice";
+import withdrawalReducer from "./Withdrawal/WithdrawalSlice";
 
-const rootReducers=combineReducers({
+const rootReducer = {
+    auth: authReducer,
+    coin: coinReducer,
+    wallet: walletReducer,
+    order: orderReducer,
+    asset: assetReducer,
+    watchlist: watchlistReducer,
+    withdrawal: withdrawalReducer,
+};
 
-    auth:authReducer,
-    coin:coinReducer,
-    wallet:walletReducer,
-    order:orderReducer,
-    asset:assetReducer,
-    watchlist:watchlistReducer,
-    withdrawal:withdrawalReducer,
-    chatBot:chatBotReducer,
-
+export const store = configureStore({
+    reducer: rootReducer,
 });
-
-export const store = legacy_createStore(rootReducers,applyMiddleware(thunk))

@@ -1,4 +1,4 @@
-import { getWithdrawalHistory } from "@/Redux/Withdrawal/Action";
+import { getWithdrawalHistory } from "@/Redux/Withdrawal/WithdrawalSlice";
 import { readableDate } from "@/Util/readableDate";
 import { readableTimestamp } from "@/Util/readbaleTimestamp";
 import { Badge } from "@/components/ui/badge";

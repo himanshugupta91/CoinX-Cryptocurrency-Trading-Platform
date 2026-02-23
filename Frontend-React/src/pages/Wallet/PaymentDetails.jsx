@@ -16,7 +16,7 @@ import {
 import PaymentDetailsForm from "./PaymentDetailsForm";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
-import { getPaymentDetails } from "@/Redux/Withdrawal/Action";
+import { getPaymentDetails } from "@/Redux/Withdrawal/WithdrawalSlice";
 import { maskAccountNumber } from "@/Util/maskAccountNumber";
 
 const PaymentDetails = () => {

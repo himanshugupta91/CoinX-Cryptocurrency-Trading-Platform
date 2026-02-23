@@ -1,19 +1,17 @@
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
-import { TrendingUp, TrendingDown } from "lucide-react";
+import { TrendingUp, TrendingDown, ArrowUpRight } from "lucide-react";
+import { useTheme } from "@/context/ThemeContext";
 
 export function CryptoCard({ coin, index }) {
     const navigate = useNavigate();
+    const { theme } = useTheme();
+    const isLight = theme === "light";
 
-    // Format large numbers with abbreviations
     const formatNumber = (num) => {
-        if (num >= 1e9) {
-            return `$${(num / 1e9).toFixed(2)}B`;
-        } else if (num >= 1e6) {
-            return `$${(num / 1e6).toFixed(2)}M`;
-        } else if (num >= 1e3) {
-            return `$${(num / 1e3).toFixed(2)}K`;
-        }
+        if (num >= 1e9) return `$${(num / 1e9).toFixed(2)}B`;
+        if (num >= 1e6) return `$${(num / 1e6).toFixed(2)}M`;
+        if (num >= 1e3) return `$${(num / 1e3).toFixed(2)}K`;
         return `$${num?.toFixed(2)}`;
     };
 
@@ -32,58 +30,64 @@ export function CryptoCard({ coin, index }) {
     return (
         <div
             onClick={() => navigate(`/market/${coin.id}`)}
-            className="glass-card p-5 rounded-xl hover-lift cursor-pointer border border-purple-500/20 modern-card animate-fadeIn"
+            className="card-hover p-5 cursor-pointer group relative"
         >
-            {/* Top Section - Rank, Logo, Name */}
-            <div className="flex items-start justify-between mb-4">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                    <span className="text-gray-500 font-bold text-sm">#{index + 1}</span>
-                    <Avatar className="h-12 w-12 ring-2 ring-purple-500/30">
+                    <Avatar className="h-10 w-10">
                         <AvatarImage src={coin.image} alt={coin.symbol} />
                     </Avatar>
                     <div>
-                        <h3 className="font-bold text-lg gradient-text">{coin.name}</h3>
-                        <p className="text-sm text-gray-400 uppercase font-medium">{coin.symbol}</p>
+                        <h3 className={`font-medium ${isLight ? "text-gray-900" : "text-white"}`}>
+                            {coin.name}
+                        </h3>
+                        <p className={`text-sm uppercase ${isLight ? "text-gray-500" : "text-neutral-500"}`}>
+                            {coin.symbol}
+                        </p>
                     </div>
                 </div>
+                <span className={`text-xs font-medium ${isLight ? "text-gray-400" : "text-neutral-600"}`}>
+                    #{index + 1}
+                </span>
             </div>
 
-            {/* Middle Section - Price and Change */}
-            <div className="mb-4 pb-4 border-b border-purple-500/20">
-                <p className="text-2xl font-bold text-white mb-2">
+            {/* Price */}
+            <div className="mb-4">
+                <p className={`text-2xl font-semibold tracking-tight ${isLight ? "text-gray-900" : "text-white"}`}>
                     {formatPrice(coin.current_price)}
                 </p>
-                <div
-                    className={`flex items-center gap-2 ${isPositive ? "text-green-500" : "text-red-500"
-                        }`}
-                >
+                <div className={`flex items-center gap-1 mt-1 ${isPositive ? "text-green-600" : "text-red-600"}`}>
                     {isPositive ? (
-                        <TrendingUp className="h-5 w-5" />
+                        <TrendingUp className="h-4 w-4" />
                     ) : (
-                        <TrendingDown className="h-5 w-5" />
+                        <TrendingDown className="h-4 w-4" />
                     )}
-                    <span className="font-semibold text-lg">
-                        {isPositive ? "+" : ""}
-                        {coin.market_cap_change_percentage_24h?.toFixed(2)}%
+                    <span className="text-sm font-medium">
+                        {isPositive ? "+" : ""}{coin.market_cap_change_percentage_24h?.toFixed(2)}%
                     </span>
-                    <span className="text-sm text-gray-400">24h</span>
                 </div>
             </div>
 
-            {/* Bottom Section - Market Cap and Volume */}
-            <div className="grid grid-cols-2 gap-4">
+            {/* Stats */}
+            <div className={`flex items-center justify-between pt-4 border-t ${isLight ? "border-gray-200" : "border-neutral-800"}`}>
                 <div>
-                    <p className="text-xs text-gray-500 mb-1 uppercase font-medium">Market Cap</p>
-                    <p className="text-sm font-bold text-gray-300">
+                    <p className={`text-xs mb-1 ${isLight ? "text-gray-500" : "text-neutral-500"}`}>Market Cap</p>
+                    <p className={`text-sm font-medium ${isLight ? "text-gray-700" : "text-neutral-300"}`}>
                         {formatNumber(coin.market_cap)}
                     </p>
                 </div>
-                <div>
-                    <p className="text-xs text-gray-500 mb-1 uppercase font-medium">24h Volume</p>
-                    <p className="text-sm font-bold text-gray-300">
+                <div className="text-right">
+                    <p className={`text-xs mb-1 ${isLight ? "text-gray-500" : "text-neutral-500"}`}>Volume 24h</p>
+                    <p className={`text-sm font-medium ${isLight ? "text-gray-700" : "text-neutral-300"}`}>
                         {formatNumber(coin.total_volume)}
                     </p>
                 </div>
+            </div>
+
+            {/* Hover Arrow */}
+            <div className="absolute top-5 right-5 opacity-0 group-hover:opacity-100 transition-opacity">
+                <ArrowUpRight className={`h-4 w-4 ${isLight ? "text-gray-400" : "text-neutral-500"}`} />
             </div>
         </div>
     );

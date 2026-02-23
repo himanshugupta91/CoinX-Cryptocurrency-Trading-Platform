@@ -1,62 +1,37 @@
-import { logout } from "@/Redux/Auth/Action";
+import { logout } from "@/Redux/Auth/AuthSlice";
 import { Button } from "@/components/ui/button";
 import { SheetClose } from "@/components/ui/sheet";
 import {
   ExitIcon,
-  HandIcon,
-  BookmarkFilledIcon,
-  BookmarkIcon,
   PersonIcon,
   DashboardIcon,
   HomeIcon,
-  BellIcon,
   ActivityLogIcon,
+  BookmarkIcon,
 } from "@radix-ui/react-icons";
-import { CreditCardIcon, LandmarkIcon, SettingsIcon, WalletIcon } from "lucide-react";
+import { CreditCardIcon, LandmarkIcon, WalletIcon } from "lucide-react";
 import { useDispatch } from "react-redux";
-
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "@/context/ThemeContext";
+
 const menu = [
-  { name: "Home", path: "/", icon: <HomeIcon className="h-6 w-6" /> },
-  {
-    name: "Portfolio",
-    path: "/portfolio",
-    icon: <DashboardIcon className="h-6 w-6" />,
-  },
-
-  {
-    name: "Watchlist",
-    path: "/watchlist",
-    icon: <BookmarkIcon className="h-6 w-6" />,
-  },
-  {
-    name: "Activity",
-    path: "/activity",
-    icon: <ActivityLogIcon className="h-6 w-6" />,
-  },
-  { name: "Wallet", path: "/wallet", icon: <WalletIcon /> },
-  {
-    name: "Payment Details",
-    path: "/payment-details",
-    icon: <LandmarkIcon className="h-6 w-6" />,
-  },
-
-  {
-    name: "Withdrawal",
-    path: "/withdrawal",
-    icon: <CreditCardIcon className="h-6 w-6" />,
-  },
-  {
-    name: "Profile",
-    path: "/profile",
-    icon: <PersonIcon className="h-6 w-6" />,
-  },
-
-  { name: "Logout", path: "/", icon: <ExitIcon className="h-6 w-6" /> },
+  { name: "Home", path: "/", icon: <HomeIcon className="h-4 w-4" /> },
+  { name: "Portfolio", path: "/portfolio", icon: <DashboardIcon className="h-4 w-4" /> },
+  { name: "Watchlist", path: "/watchlist", icon: <BookmarkIcon className="h-4 w-4" /> },
+  { name: "Activity", path: "/activity", icon: <ActivityLogIcon className="h-4 w-4" /> },
+  { name: "Wallet", path: "/wallet", icon: <WalletIcon className="h-4 w-4" /> },
+  { name: "Payment Details", path: "/payment-details", icon: <LandmarkIcon className="h-4 w-4" /> },
+  { name: "Withdrawal", path: "/withdrawal", icon: <CreditCardIcon className="h-4 w-4" /> },
+  { name: "Profile", path: "/profile", icon: <PersonIcon className="h-4 w-4" /> },
+  { name: "Logout", path: "/", icon: <ExitIcon className="h-4 w-4" /> },
 ];
+
 const SideBar = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { theme } = useTheme();
+  const isLight = theme === "light";
+
   const handleLogout = () => {
     dispatch(logout());
   };
@@ -71,19 +46,22 @@ const SideBar = () => {
   };
 
   return (
-    <div className="mt-10 space-y-3">
-      {menu.map((item, index) => (
-        <div key={item.name} className="animate-slideInLeft" style={{ animationDelay: `${index * 50}ms` }}>
+    <div className="mt-8 space-y-1">
+      {menu.map((item) => (
+        <div key={item.name}>
           <SheetClose className="w-full">
             <Button
               onClick={() => handleMenuClick(item)}
-              variant="outline"
-              className="flex items-center gap-5 py-6 w-full hover-lift border-purple-500/20 hover:border-purple-500/50 hover:bg-gradient-to-r hover:from-purple-500/10 hover:to-pink-500/10 group relative overflow-hidden"
+              variant="ghost"
+              className={`flex items-center gap-3 py-3 w-full justify-start rounded-lg ${item.name === "Logout"
+                ? "text-red-500 hover:text-red-500 hover:bg-red-500/10"
+                : isLight
+                  ? "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                  : "text-neutral-400 hover:text-white hover:bg-neutral-800/50"
+                }`}
             >
-              <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-purple-500 to-pink-500 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300"></div>
-              <span className="w-8 group-hover:scale-110 transition-transform duration-300">{item.icon}</span>
-
-              <p className="group-hover:translate-x-1 transition-transform duration-300">{item.name}</p>
+              <span className="w-5">{item.icon}</span>
+              <span className="text-sm font-medium">{item.name}</span>
             </Button>
           </SheetClose>
         </div>

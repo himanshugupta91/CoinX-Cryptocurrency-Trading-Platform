@@ -1,14 +1,14 @@
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   AvatarIcon,
   DragHandleHorizontalIcon,
   MagnifyingGlassIcon,
-  HomeIcon,
-  DashboardIcon,
-  BookmarkIcon,
-  ActivityLogIcon,
+  SunIcon,
+  MoonIcon,
+  ExitIcon,
+  PersonIcon,
 } from "@radix-ui/react-icons";
+import { Home, PieChart, Bookmark, Activity, Wallet } from "lucide-react";
 import SideBar from "../SideBar/SideBar";
 import {
   Sheet,
@@ -17,139 +17,204 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useState } from "react";
-import { useSelector } from "react-redux";
-import { WalletIcon, CreditCardIcon, LandmarkIcon } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useDispatch, useSelector } from "react-redux";
+import { useTheme } from "@/context/ThemeContext";
+import { logout } from "@/Redux/Auth/AuthSlice";
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { auth } = useSelector((store) => store);
+  const { theme, toggleTheme } = useTheme();
 
-  const handleNavigate = () => {
-    if (auth.user) {
-      auth.user.role === "ROLE_ADMIN" ? navigate("/admin/withdrawal") : navigate("/profile")
-    }
-  }
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate("/");
+  };
 
-  // Main navigation items
   const navLinks = [
-    { name: "Home", path: "/", icon: <HomeIcon className="h-4 w-4" /> },
-    { name: "Portfolio", path: "/portfolio", icon: <DashboardIcon className="h-4 w-4" /> },
-    { name: "Watchlist", path: "/watchlist", icon: <BookmarkIcon className="h-4 w-4" /> },
-    { name: "Activity", path: "/activity", icon: <ActivityLogIcon className="h-4 w-4" /> },
-    { name: "Wallet", path: "/wallet", icon: <WalletIcon className="h-4 w-4" /> },
-    { name: "Payment Details", path: "/payment-details", icon: <LandmarkIcon className="h-4 w-4" /> },
-    { name: "Withdrawal", path: "/withdrawal", icon: <CreditCardIcon className="h-4 w-4" /> },
+    { name: "Home", path: "/", icon: <Home className="h-4 w-4" /> },
+    { name: "Portfolio", path: "/portfolio", icon: <PieChart className="h-4 w-4" /> },
+    { name: "Watchlist", path: "/watchlist", icon: <Bookmark className="h-4 w-4" /> },
+    { name: "Activity", path: "/activity", icon: <Activity className="h-4 w-4" /> },
+    { name: "Wallet", path: "/wallet", icon: <Wallet className="h-4 w-4" /> },
   ];
 
   return (
-    <>
-      <div className="glass-navbar backdrop-blur-xl border-b border-purple-500/10 sticky top-0 left-0 right-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between gap-4">
-            {/* Left: Mobile Menu + Logo */}
-            <div className="flex items-center gap-3">
-              {/* Mobile Menu */}
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="lg:hidden h-10 w-10 rounded-xl hover:bg-purple-500/10"
-                  >
-                    <DragHandleHorizontalIcon className="h-5 w-5" />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent className="w-72 glass-panel border-r border-purple-500/20" side="left">
-                  <SheetHeader>
-                    <SheetTitle>
-                      <div className="text-2xl flex justify-center items-center gap-2">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src="https://cdn.pixabay.com/photo/2021/04/30/16/47/binance-logo-6219389_1280.png" />
-                        </Avatar>
-                        <div>
-                          <span className="font-bold gradient-text-orange">Coin</span>
-                          <span className="gradient-text">X</span>
-                        </div>
-                      </div>
-                    </SheetTitle>
-                  </SheetHeader>
-                  <SideBar />
-                </SheetContent>
-              </Sheet>
-
-              {/* Logo */}
-              <div
-                onClick={() => navigate("/")}
-                className="flex items-center gap-2 cursor-pointer group"
-              >
-                <Avatar className="h-9 w-9 ring-2 ring-purple-500/20 group-hover:ring-purple-500/50 transition-all">
-                  <AvatarImage src="https://cdn.pixabay.com/photo/2021/04/30/16/47/binance-logo-6219389_1280.png" />
-                </Avatar>
-                <div className="hidden sm:block">
-                  <p className="text-base font-bold leading-tight">
-                    <span className="gradient-text-orange">Coin</span>
-                    <span className="gradient-text">X</span>
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Center: Navigation Links (Desktop) */}
-            <nav className="hidden lg:flex items-center gap-1">
-              {navLinks.map((link, index) => (
+    <div className={`navbar sticky top-0 left-0 right-0 z-50 ${theme === "light"
+      ? "bg-white/80 border-b border-neutral-200"
+      : "bg-black/80 border-b border-neutral-800"
+      } backdrop-blur-xl`}>
+      <div className="max-w-6xl mx-auto px-4 py-3">
+        <div className="flex items-center justify-between">
+          {/* Left: Mobile Menu + Logo */}
+          <div className="flex items-center gap-4">
+            {/* Mobile Menu */}
+            <Sheet>
+              <SheetTrigger asChild>
                 <Button
-                  key={link.name}
-                  onClick={() => navigate(link.path)}
                   variant="ghost"
-                  className="h-9 px-3 rounded-lg hover:bg-purple-500/10 transition-all duration-300 group animate-fadeIn relative overflow-hidden"
-                  style={{ animationDelay: `${index * 50}ms` }}
+                  size="icon"
+                  className="lg:hidden h-9 w-9"
                 >
-                  {/* Hover gradient effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500/0 via-purple-500/5 to-pink-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-
-                  <span className="mr-2 group-hover:scale-110 transition-transform duration-300 relative z-10">{link.icon}</span>
-                  <span className="text-sm relative z-10">{link.name}</span>
-
-                  {/* Bottom border animation */}
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-pink-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-center"></div>
+                  <DragHandleHorizontalIcon className="h-5 w-5" />
                 </Button>
-              ))}
-            </nav>
-
-            {/* Right: Search + Profile */}
-            <div className="flex items-center gap-2">
-              {/* Search */}
-              <Button
-                onClick={() => navigate("/search")}
-                variant="ghost"
-                className="h-11 px-5 rounded-xl hover:bg-purple-500/10 border border-purple-500/20 hover:border-purple-500/40 transition-all group"
+              </SheetTrigger>
+              <SheetContent
+                className={`w-72 border-r ${theme === "light"
+                  ? "bg-white border-neutral-200"
+                  : "bg-black border-neutral-800"
+                  }`}
+                side="left"
               >
-                <MagnifyingGlassIcon className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform" />
-                <span className="hidden md:inline text-base font-medium">Search</span>
-              </Button>
+                <SheetHeader>
+                  <SheetTitle>
+                    <span className={`text-xl font-semibold ${theme === "light" ? "text-black" : "text-white"}`}>
+                      CoinX
+                    </span>
+                  </SheetTitle>
+                </SheetHeader>
+                <SideBar />
+              </SheetContent>
+            </Sheet>
 
-              {/* Profile */}
-              <Avatar
-                onClick={handleNavigate}
-                className="h-9 w-9 cursor-pointer ring-2 ring-purple-500/20 hover:ring-purple-500/50 transition-all hover:scale-105"
-              >
-                {!auth.user ? (
-                  <AvatarIcon className="h-5 w-5" />
-                ) : (
-                  <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-sm font-semibold">
-                    {auth.user?.fullName[0].toUpperCase()}
-                  </AvatarFallback>
-                )}
-              </Avatar>
+            {/* Logo */}
+            <div
+              onClick={() => navigate("/")}
+              className="flex items-center gap-2 cursor-pointer"
+            >
+              <span className={`text-xl font-semibold ${theme === "light" ? "text-black" : "text-white"}`}>
+                CoinX
+              </span>
             </div>
           </div>
+
+          {/* Center: Navigation Links (Desktop) */}
+          <nav className="hidden lg:flex items-center gap-1">
+            {navLinks.map((link) => (
+              <Button
+                key={link.name}
+                onClick={() => navigate(link.path)}
+                variant="ghost"
+                className={`h-9 px-4 rounded-lg text-sm font-medium ${theme === "light"
+                  ? "text-neutral-600 hover:text-black hover:bg-neutral-100"
+                  : "text-neutral-400 hover:text-white hover:bg-neutral-800/50"
+                  }`}
+              >
+                <span className="mr-2">{link.icon}</span>
+                {link.name}
+              </Button>
+            ))}
+          </nav>
+
+          {/* Right: Theme Toggle + Search + Profile */}
+          <div className="flex items-center gap-2">
+            {/* Theme Toggle */}
+            <Button
+              onClick={toggleTheme}
+              variant="ghost"
+              size="icon"
+              className={`h-9 w-9 rounded-lg ${theme === "light"
+                ? "text-neutral-600 hover:text-black hover:bg-neutral-100"
+                : "text-neutral-400 hover:text-white hover:bg-neutral-800/50"
+                }`}
+            >
+              {theme === "light" ? (
+                <MoonIcon className="h-5 w-5" />
+              ) : (
+                <SunIcon className="h-5 w-5" />
+              )}
+            </Button>
+
+            {/* Search */}
+            <Button
+              onClick={() => navigate("/search")}
+              variant="ghost"
+              size="icon"
+              className={`h-9 w-9 rounded-lg ${theme === "light"
+                ? "text-neutral-600 hover:text-black hover:bg-neutral-100"
+                : "text-neutral-400 hover:text-white hover:bg-neutral-800/50"
+                }`}
+            >
+              <MagnifyingGlassIcon className="h-5 w-5" />
+            </Button>
+
+            {/* Profile Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Avatar
+                  className={`h-9 w-9 cursor-pointer ring-2 ring-offset-2 transition-all hover:ring-violet-500 ${theme === "light"
+                    ? "bg-neutral-200 ring-neutral-300 ring-offset-white"
+                    : "bg-neutral-800 ring-neutral-700 ring-offset-black"
+                    }`}
+                >
+                  {!auth.user ? (
+                    <AvatarIcon className="h-4 w-4 text-neutral-400" />
+                  ) : (
+                    <AvatarFallback className={`text-sm font-semibold ${theme === "light"
+                      ? "bg-black text-white"
+                      : "bg-white text-black"
+                      }`}>
+                      {auth.user?.fullName[0].toUpperCase()}
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                sideOffset={8}
+                className={`w-56 p-2 rounded-xl shadow-xl ${theme === "light"
+                  ? "bg-white border-neutral-200"
+                  : "bg-neutral-900 border-neutral-800"
+                  }`}
+              >
+                {/* User Info Header */}
+                <div className={`px-3 py-3 mb-2 rounded-lg ${theme === "light" ? "bg-neutral-50" : "bg-neutral-800/50"}`}>
+                  <p className={`text-sm font-semibold ${theme === "light" ? "text-gray-900" : "text-white"}`}>
+                    {auth.user?.fullName}
+                  </p>
+                  <p className={`text-xs ${theme === "light" ? "text-gray-500" : "text-neutral-400"}`}>
+                    {auth.user?.email}
+                  </p>
+                </div>
+
+                <DropdownMenuItem
+                  onClick={() => navigate(auth.user?.role === "ROLE_ADMIN" ? "/admin/withdrawal" : "/profile")}
+                  className={`cursor-pointer rounded-lg px-3 py-2.5 ${theme === "light"
+                    ? "text-gray-700 hover:bg-gray-100"
+                    : "text-neutral-300 hover:bg-neutral-800"
+                    }`}
+                >
+                  <PersonIcon className="mr-3 h-4 w-4" />
+                  {auth.user?.role === "ROLE_ADMIN" ? "Admin Panel" : "Profile"}
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator className={`my-2 ${theme === "light" ? "bg-neutral-200" : "bg-neutral-800"}`} />
+
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  className="cursor-pointer rounded-lg px-3 py-2.5 text-red-500 hover:text-white hover:bg-red-500 transition-colors"
+                >
+                  <ExitIcon className="mr-3 h-4 w-4" />
+                  <span className="font-medium">Logout</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
-      </div >
-    </>
+      </div>
+    </div>
   );
 };
 
 export default Navbar;
+

@@ -2,7 +2,7 @@ import {
   getAllWithdrawalRequest,
   getWithdrawalHistory,
   proceedWithdrawal,
-} from "@/Redux/Withdrawal/Action";
+} from "@/Redux/Withdrawal/WithdrawalSlice";
 import { readableTimestamp } from "@/Util/readbaleTimestamp";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -73,8 +73,8 @@ const WithdrawalAdmin = () => {
                 <TableCell className="text-right">
                   <Badge
                     className={`text-white ${item.status == "PENDING"
-                        ? "bg-red-500 "
-                        : "bg-green-500"
+                      ? "bg-red-500 "
+                      : "bg-green-500"
                       }
                    `}
                   >

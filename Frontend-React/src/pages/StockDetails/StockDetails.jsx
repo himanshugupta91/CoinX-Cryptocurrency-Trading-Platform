@@ -1,17 +1,11 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable no-constant-condition */
 import { Button } from "@/components/ui/button";
-import {
-  BookmarkFilledIcon,
-  BookmarkIcon,
-  DotIcon,
-  HeartIcon,
-} from "@radix-ui/react-icons";
+import { BookmarkFilledIcon, BookmarkIcon } from "@radix-ui/react-icons";
 import StockChart from "./StockChart";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -20,18 +14,21 @@ import TreadingForm from "./TreadingForm";
 import { useParams } from "react-router-dom";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchCoinById, fetchCoinDetails } from "@/Redux/Coin/Action";
+import { fetchCoinDetails } from "@/Redux/Coin/CoinSlice";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { existInWatchlist } from "@/Util/existInWatchlist";
-import { addItemToWatchlist, getUserWatchlist } from "@/Redux/Watchlist/Action";
-import { getAssetDetails } from "@/Redux/Assets/Action";
-import { getUserWallet } from "@/Redux/Wallet/Action";
+import { addItemToWatchlist, getUserWatchlist } from "@/Redux/Watchlist/WatchlistSlice";
+import { getUserWallet } from "@/Redux/Wallet/WalletSlice";
 import SpinnerBackdrop from "@/components/custome/SpinnerBackdrop";
+import { TrendingUp, TrendingDown } from "lucide-react";
+import { useTheme } from "@/context/ThemeContext";
 
 const StockDetails = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
   const { coin, watchlist, auth } = useSelector((store) => store);
+  const { theme } = useTheme();
+  const isLight = theme === "light";
 
   useEffect(() => {
     dispatch(
@@ -55,85 +52,82 @@ const StockDetails = () => {
     return <SpinnerBackdrop />;
   }
 
-  return (
-    <>
-      {coin.loading ? (
-        "loading..."
-      ) : (
-        <div className="p-5 mt-5 animate-fadeIn">
-          <div className="flex justify-between glass-card p-5 rounded-xl border border-purple-500/30 hover-lift">
-            <div className="flex gap-5 items-center">
-              <div>
-                <Avatar className="h-14 w-14 ring-2 ring-purple-500/50">
-                  <AvatarImage src={coin.coinDetails?.image?.large} />
-                </Avatar>
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <p className="font-bold text-lg">{coin.coinDetails?.symbol?.toUpperCase()}</p>
-                  <DotIcon className="text-gray-400" />
-                  <p className="text-gray-400">{coin.coinDetails?.name}</p>
-                </div>
-                <div className="flex items-end gap-2">
-                  <p className="text-xl font-bold gradient-text">
-                    ${coin.coinDetails?.market_data.current_price.usd}
-                  </p>
-                  <p
-                    className={`font-semibold ${coin.coinDetails?.market_data.market_cap_change_24h < 0
-                      ? "text-red-400"
-                      : "text-green-400"
-                      }`}
-                  >
-                    <span className="">
-                      {coin.coinDetails?.market_data.market_cap_change_24h}
-                    </span>
-                    <span>
-                      (
-                      {
-                        coin.coinDetails?.market_data
-                          .market_cap_change_percentage_24h
-                      }
-                      %)
-                    </span>
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-5">
-              <Button
-                onClick={handleAddToWatchlist}
-                className="h-10 w-10 hover-lift hover-glow"
-                variant="outline"
-                size="icon"
-              >
-                {existInWatchlist(watchlist.items, coin.coinDetails) ? (
-                  <BookmarkFilledIcon className="h-6 w-6 text-purple-400" />
-                ) : (
-                  <BookmarkIcon className="h-6 w-6" />
-                )}
-              </Button>
+  const isPositive = coin.coinDetails?.market_data?.market_cap_change_24h >= 0;
 
-              <Dialog>
-                <DialogTrigger>
-                  <Button size="lg" className="btn-gradient hover-lift hover-glow">TRADE</Button>
-                </DialogTrigger>
-                <DialogContent className="glass-card border-purple-500/30">
-                  <DialogHeader className="">
-                    <DialogTitle className="px-10 pt-5 text-center gradient-text">
-                      How much do you want to spend?
-                    </DialogTitle>
-                  </DialogHeader>
-                  <TreadingForm />
-                </DialogContent>
-              </Dialog>
+  return (
+    <div className="max-w-6xl mx-auto px-4 py-8 animate-fadeIn">
+      {/* Coin Header */}
+      <div className="card p-6 mb-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <Avatar className="h-14 w-14">
+              <AvatarImage src={coin.coinDetails?.image?.large} />
+            </Avatar>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className={`text-xl font-semibold ${isLight ? "text-gray-900" : "text-white"}`}>
+                  {coin.coinDetails?.name}
+                </h1>
+                <span className={`uppercase ${isLight ? "text-gray-500" : "text-neutral-500"}`}>
+                  {coin.coinDetails?.symbol}
+                </span>
+              </div>
+              <div className="flex items-center gap-3 mt-1">
+                <span className={`text-2xl font-semibold ${isLight ? "text-gray-900" : "text-white"}`}>
+                  ${coin.coinDetails?.market_data?.current_price?.usd?.toLocaleString()}
+                </span>
+                <span className={`flex items-center gap-1 text-sm font-medium ${isPositive ? "text-green-500" : "text-red-500"}`}>
+                  {isPositive ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
+                  {coin.coinDetails?.market_data?.market_cap_change_percentage_24h?.toFixed(2)}%
+                </span>
+              </div>
             </div>
           </div>
-          <div className="mt-10">
-            <StockChart coinId={coin.coinDetails?.id} />
+
+          <div className="flex items-center gap-3">
+            <Button
+              onClick={handleAddToWatchlist}
+              variant="ghost"
+              size="icon"
+              className={`h-10 w-10 ${isLight
+                ? "border border-gray-200 hover:border-gray-300 hover:bg-gray-100"
+                : "border border-neutral-800 hover:border-neutral-700 hover:bg-neutral-800"
+                }`}
+            >
+              {existInWatchlist(watchlist.items, coin.coinDetails) ? (
+                <BookmarkFilledIcon className={`h-5 w-5 ${isLight ? "text-black" : "text-white"}`} />
+              ) : (
+                <BookmarkIcon className={`h-5 w-5 ${isLight ? "text-gray-400" : "text-neutral-400"}`} />
+              )}
+            </Button>
+
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button className={`font-medium px-6 ${isLight
+                  ? "bg-black text-white hover:bg-gray-800"
+                  : "bg-white text-black hover:bg-neutral-200"
+                  }`}>
+                  Trade
+                </Button>
+              </DialogTrigger>
+              <DialogContent className={isLight ? "bg-white border-gray-200" : "bg-neutral-900 border-neutral-800"}>
+                <DialogHeader>
+                  <DialogTitle className={`text-center ${isLight ? "text-gray-900" : "text-white"}`}>
+                    Trade {coin.coinDetails?.symbol?.toUpperCase()}
+                  </DialogTitle>
+                </DialogHeader>
+                <TreadingForm />
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
-      )}
-    </>
+      </div>
+
+      {/* Chart */}
+      <div className="card p-6">
+        <StockChart coinId={coin.coinDetails?.id} />
+      </div>
+    </div>
   );
 };
 

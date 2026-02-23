@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-
-import { addItemToWatchlist, getUserWatchlist } from "@/Redux/Watchlist/Action";
+import { addItemToWatchlist, getUserWatchlist } from "@/Redux/Watchlist/WatchlistSlice";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Table,
@@ -10,17 +9,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { BookmarkFilledIcon } from "@radix-ui/react-icons";
+import { useTheme } from "@/context/ThemeContext";
 
 const Watchlist = () => {
   const dispatch = useDispatch();
   const [page, setPage] = useState(1);
-  const { watchlist, coin } = useSelector((store) => store);
+  const { watchlist } = useSelector((store) => store);
   const navigate = useNavigate();
+  const { theme } = useTheme();
+  const isLight = theme === "light";
 
   useEffect(() => {
     dispatch(getUserWatchlist());
@@ -29,62 +30,88 @@ const Watchlist = () => {
   const handleAddToWatchlist = (id) => {
     dispatch(addItemToWatchlist(id))
   }
+
   return (
-    <div className="pt-8 lg:px-10">
-      <div className="flex items-center pt-5 pb-10 gap-5">
-        <BookmarkFilledIcon className="h-10 w-10" />
-        <h1 className=" text-4xl font-semibold">Watchlist</h1>
+    <div className="max-w-6xl mx-auto px-4 py-8 animate-fadeIn">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className={`text-2xl font-semibold mb-2 ${isLight ? "text-gray-900" : "text-white"}`}>
+          Watchlist
+        </h1>
+        <p className={isLight ? "text-gray-500" : "text-neutral-500"}>
+          Your saved cryptocurrencies
+        </p>
       </div>
 
-      <Table className="px-5 lg:px-20  border-t relative border-x border-b p-10 ">
-        <ScrollArea className={""}>
+      {/* Table */}
+      <div className="card overflow-hidden">
+        <Table>
           <TableHeader>
-            <TableRow className="sticky top-0 left-0 right-0 bg-background">
-              <TableHead className="py-4">Coin</TableHead>
-              <TableHead>SYMBOL</TableHead>
-              <TableHead>VOLUME</TableHead>
-              <TableHead>MARKET CAP</TableHead>
-              <TableHead>24H</TableHead>
-              <TableHead className="">PRICE</TableHead>
-              <TableHead className="text-right text-red-700">Remove</TableHead>
+            <TableRow className={`hover:bg-transparent ${isLight ? "border-gray-200" : "border-neutral-800"}`}>
+              <TableHead className={isLight ? "text-gray-500 font-medium" : "text-neutral-500 font-medium"}>Coin</TableHead>
+              <TableHead className={isLight ? "text-gray-500 font-medium" : "text-neutral-500 font-medium"}>Price</TableHead>
+              <TableHead className={isLight ? "text-gray-500 font-medium" : "text-neutral-500 font-medium"}>24h Change</TableHead>
+              <TableHead className={isLight ? "text-gray-500 font-medium" : "text-neutral-500 font-medium"}>Market Cap</TableHead>
+              <TableHead className={isLight ? "text-gray-500 font-medium" : "text-neutral-500 font-medium"}>Volume</TableHead>
+              <TableHead className={`text-right ${isLight ? "text-gray-500 font-medium" : "text-neutral-500 font-medium"}`}>Remove</TableHead>
             </TableRow>
           </TableHeader>
-
-          <TableBody className="">
-            {watchlist.items.map((item) => (
-              <TableRow className="" key={item.id}>
-                <TableCell
-                  onClick={() => navigate(`/market/${item.id}`)}
-                  className="font-medium flex items-center gap-2 cursor-pointer"
-                >
-                  <Avatar className="-z-50">
-                    <AvatarImage src={item.image} alt={item.symbol} />
-                  </Avatar>
-                  <span> {item.name}</span>
+          <TableBody>
+            {watchlist.items?.map((item) => (
+              <TableRow
+                key={item.id}
+                className={isLight ? "border-gray-200 hover:bg-gray-50" : "border-neutral-800 hover:bg-neutral-800/50"}
+              >
+                <TableCell>
+                  <div
+                    onClick={() => navigate(`/market/${item.id}`)}
+                    className="flex items-center gap-3 cursor-pointer"
+                  >
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={item.image} alt={item.symbol} />
+                    </Avatar>
+                    <div>
+                      <p className={`font-medium ${isLight ? "text-gray-900" : "text-white"}`}>{item.name}</p>
+                      <p className={`text-xs uppercase ${isLight ? "text-gray-500" : "text-neutral-500"}`}>{item.symbol}</p>
+                    </div>
+                  </div>
                 </TableCell>
-                <TableCell>{item.symbol.toUpperCase()}</TableCell>
-                <TableCell>{item.total_volume}</TableCell>
-                <TableCell>{item.market_cap}</TableCell>
-                <TableCell
-                  className={`${item.market_cap_change_percentage_24h < 0
-                    ? "text-red-600"
-                    : "text-green-600"
-                    }`}
-                >
-                  {item.market_cap_change_percentage_24h}%
+                <TableCell className={`font-medium ${isLight ? "text-gray-900" : "text-white"}`}>
+                  ${item.current_price?.toLocaleString()}
                 </TableCell>
-                <TableCell>{item.current_price}</TableCell>
-
+                <TableCell>
+                  <span className={item.market_cap_change_percentage_24h < 0 ? "text-red-500" : "text-green-500"}>
+                    {item.market_cap_change_percentage_24h > 0 ? "+" : ""}
+                    {item.market_cap_change_percentage_24h?.toFixed(2)}%
+                  </span>
+                </TableCell>
+                <TableCell className={isLight ? "text-gray-700" : "text-neutral-300"}>
+                  ${(item.market_cap / 1e9).toFixed(2)}B
+                </TableCell>
+                <TableCell className={isLight ? "text-gray-700" : "text-neutral-300"}>
+                  ${(item.total_volume / 1e9).toFixed(2)}B
+                </TableCell>
                 <TableCell className="text-right">
-                  <Button onClick={() => handleAddToWatchlist(item.id)} className="h-10 w-10" variant="outline" size="icon">
-                    <BookmarkFilledIcon className="h-6 w-6" />
+                  <Button
+                    onClick={() => handleAddToWatchlist(item.id)}
+                    variant="ghost"
+                    size="icon"
+                    className={`h-8 w-8 hover:text-red-500 hover:bg-red-500/10 ${isLight ? "text-gray-400" : "text-neutral-500"}`}
+                  >
+                    <BookmarkFilledIcon className="h-4 w-4" />
                   </Button>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
-        </ScrollArea>
-      </Table>
+        </Table>
+
+        {(!watchlist.items || watchlist.items.length === 0) && (
+          <div className="py-16 text-center">
+            <p className={isLight ? "text-gray-500" : "text-neutral-500"}>No items in your watchlist</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

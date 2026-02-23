@@ -1,160 +1,113 @@
 /* eslint-disable no-unused-vars */
-import "./Auth.css";
 import { Button } from "@/components/ui/button";
-
 import SignupForm from "./signup/SignupForm";
 import LoginForm from "./login/login";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useState } from "react";
-import { Card } from "@/components/ui/card";
-import ForgotPassword from "./ForgotPassword";
 import ForgotPasswordForm from "./ForgotPassword";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useSelector } from "react-redux";
-import SpinnerBackdrop from "@/components/custome/SpinnerBackdrop";
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
-import { AvatarFallback } from "@radix-ui/react-avatar";
-import { ToastAction } from "@/components/ui/toast";
-import { useToast } from "@/components/ui/use-toast";
 import CustomeToast from "@/components/custome/CustomeToast";
+import authBg from "@/assets/auth_background_waves.png";
 
 const Auth = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { auth } = useSelector((store) => store);
-  const { toast } = useToast();
+    const navigate = useNavigate();
+    const location = useLocation();
+    const { auth } = useSelector((store) => store);
 
-  const [animate, setAnimate] = useState(false);
+    const isSignup = location.pathname === "/signup";
+    const isForgot = location.pathname === "/forgot-password";
 
-  const handleNavigation = (path) => {
-    navigate(path);
-  };
+    return (
+        <div className="h-screen w-full flex overflow-hidden bg-[#000000]">
+            {/* Left Side - Visual */}
+            <div className="hidden lg:flex w-1/2 relative bg-neutral-900 items-center justify-center overflow-hidden">
+                <div className="absolute inset-0 w-full h-full">
+                    <img
+                        src={authBg}
+                        alt="Background"
+                        className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/20 backdrop-blur-[2px]"></div>
+                </div>
 
-  const [showToast, setShowToast] = useState(false);
-
-  const handleShowToast = () => {
-    setShowToast(true);
-  };
-
-  console.log("---------- ", auth.error)
-
-
-  return (
-    <div className={`authContainer h-screen relative flex items-center justify-center overflow-hidden`}>
-      {/* Subtle accent elements */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-purple-600/5 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl"></div>
-      <div className="absolute top-1/2 right-1/4 w-64 h-64 bg-pink-600/5 rounded-full blur-3xl"></div>
-
-      {/* Main container with split layout */}
-      <div className="w-full h-full max-w-7xl mx-auto flex items-center justify-center p-8">
-        <div className="w-full h-[90vh] max-h-[700px] flex rounded-3xl overflow-hidden shadow-2xl bg-slate-900/50 backdrop-blur-xl border border-white/10">
-
-          {/* Left side - Branding/Image */}
-          <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-slate-900 via-blue-900/50 to-purple-900/50 relative overflow-hidden">
-            {/* Background pattern */}
-            <div className="absolute inset-0 opacity-10">
-              <div className="absolute top-0 left-0 w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')]"></div>
+                <div className="relative z-10 p-12 text-white max-w-xl">
+                    <h1 className="text-6xl font-bold tracking-tight mb-6 leading-tight">
+                        Trade Crypto<br />
+                        <span className="text-white">Secure & Fast</span>
+                    </h1>
+                    <p className="text-xl text-neutral-300 font-light">
+                        Buy, sell, and trade cryptocurrencies with CoinX
+                    </p>
+                </div>
             </div>
 
-            {/* Content */}
-            <div className="relative z-10 flex flex-col items-center justify-center w-full p-12 text-center">
-              {/* Logo */}
-              <div className="mb-8">
-                <h1 className="text-7xl font-bold mb-4">
-                  <span className="gradient-text-orange">Coin</span>
-                  <span className="gradient-text">X</span>
-                </h1>
-              </div>
+            {/* Right Side - Form */}
+            <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-[#000000] relative">
+                {/* Mobile Background (visible only on small screens) */}
+                <div className="lg:hidden absolute inset-0 z-0">
+                    <div className="absolute inset-0 bg-gradient-to-b from-violet-900/20 to-black"></div>
+                </div>
 
-              {/* Tagline */}
-              <div className="space-y-4 animate-slideUp">
-                <h2 className="text-4xl font-bold text-white">
-                  Crypto Trading
-                </h2>
-                <h3 className="text-3xl font-light text-white/90">
-                  Made Simple
-                </h3>
-                <p className="text-lg text-white/70 mt-6 max-w-md">
-                  Trade cryptocurrencies with confidence. Real-time data, secure transactions, and powerful analytics.
-                </p>
-              </div>
+                <div className="w-full max-w-[420px] relative z-10">
 
-              {/* Decorative elements */}
-              <div className="absolute bottom-12 left-12 w-32 h-32 bg-purple-500/20 rounded-full blur-2xl"></div>
-              <div className="absolute top-12 right-12 w-40 h-40 bg-blue-500/20 rounded-full blur-2xl"></div>
+                    <CustomeToast show={auth.error} message={auth.error?.error} />
+
+                    {/* Forms */}
+                    {isSignup ? (
+                        <div className="animate-fadeIn">
+                            <SignupForm />
+                        </div>
+                    ) : isForgot ? (
+                        <div className="animate-fadeIn">
+                            <ForgotPasswordForm />
+                        </div>
+                    ) : (
+                        <div className="animate-fadeIn">
+                            <LoginForm />
+                        </div>
+                    )}
+
+                    {/* Footer Links */}
+                    <div className="mt-8">
+                        {isSignup ? (
+                            <p className="text-neutral-500 text-sm">
+                                Already have an account?{" "}
+                                <button
+                                    onClick={() => navigate("/signin")}
+                                    className="text-white font-medium hover:text-violet-400 transition-colors ml-1"
+                                >
+                                    Sign in
+                                </button>
+                            </p>
+                        ) : isForgot ? (
+                            <button
+                                onClick={() => navigate("/signin")}
+                                className="text-neutral-500 hover:text-white text-sm transition-colors flex items-center gap-2"
+                            >
+                                ← Back to sign in
+                            </button>
+                        ) : (
+                            <div className="mt-6 flex flex-col gap-4">
+                                <a href="#" onClick={(e) => { e.preventDefault(); navigate("/forgot-password"); }} className="text-neutral-400 hover:text-white text-sm transition-colors w-fit">
+                                    Forgot Password?
+                                </a>
+                            </div>
+                        )}
+                        {!isSignup && !isForgot && (
+                            <div className="mt-8">
+                                <Button
+                                    onClick={() => navigate("/signup")}
+                                    variant="outline"
+                                    className="w-full h-12 border-neutral-800 text-white hover:bg-neutral-900 hover:text-white"
+                                >
+                                    Create new account
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                </div>
             </div>
-          </div>
-
-          {/* Right side - Login Form */}
-          <div className="w-full lg:w-1/2 bg-gradient-to-br from-slate-900/95 to-slate-800/95 flex items-center justify-center p-8 lg:p-12">
-            <div className="w-full max-w-md space-y-8">
-              <CustomeToast show={auth.error} message={auth.error?.error} />
-
-              {/* Mobile logo - only show on small screens */}
-              <div className="lg:hidden text-center mb-8">
-                <h1 className="text-5xl font-bold">
-                  <span className="gradient-text-orange">Coin</span>
-                  <span className="gradient-text">X</span>
-                </h1>
-              </div>
-
-              {location.pathname == "/signup" ? (
-                <div className="w-full animate-slideUp">
-                  <SignupForm />
-
-                  <div className="flex items-center justify-center mt-6">
-                    <span className="text-gray-400">Already have an account? </span>
-                    <Button
-                      onClick={() => handleNavigation("/signin")}
-                      variant="ghost"
-                      className="text-purple-400 hover:text-purple-300"
-                    >
-                      Sign In
-                    </Button>
-                  </div>
-                </div>
-              ) : location.pathname == "/forgot-password" ? (
-                <div className="w-full animate-slideUp">
-                  <ForgotPasswordForm />
-                  <div className="flex items-center justify-center mt-6">
-                    <span className="text-gray-400">Back to </span>
-                    <Button onClick={() => navigate("/signin")} variant="ghost" className="text-purple-400 hover:text-purple-300">
-                      Sign In
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="w-full animate-slideUp">
-                  <LoginForm />
-
-                  <div className="flex items-center justify-center mt-6">
-                    <span className="text-gray-400">Don't have an account? </span>
-                    <Button
-                      onClick={() => handleNavigation("/signup")}
-                      variant="ghost"
-                      className="text-purple-400 hover:text-purple-300"
-                    >
-                      Sign Up
-                    </Button>
-                  </div>
-                  <div className="mt-4">
-                    <Button
-                      onClick={() => navigate("/forgot-password")}
-                      variant="ghost"
-                      className="w-full text-gray-400 hover:text-purple-300"
-                    >
-                      Forgot Password?
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 };
 
 export default Auth;

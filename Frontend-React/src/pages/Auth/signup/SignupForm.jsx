@@ -13,22 +13,22 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { register } from "@/Redux/Auth/Action";
+import { register } from "@/Redux/Auth/AuthSlice";
+import { Mail, Lock, User } from "lucide-react";
 import SpinnerBackdrop from "@/components/custome/SpinnerBackdrop";
+import LoginWithGoogle from "../LoginWithGoogle";
 
 const formSchema = z.object({
   fullName: z.string().nonempty("Full name is required"),
   email: z.string().email("Invalid email address").optional(),
-  password: z
-    .string()
-    .min(8, "Password must be at least 8 characters long")
-    .optional(),
+  password: z.string().min(8, "Password must be at least 8 characters long").optional(),
 });
-const SignupForm = () => {
-  const { auth } = useSelector(store => store)
 
+const SignupForm = () => {
+  const { auth } = useSelector(store => store);
   const navigate = useNavigate();
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
+
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -37,15 +37,20 @@ const SignupForm = () => {
       fullName: "",
     },
   });
+
   const onSubmit = (data) => {
-    data.navigate = navigate
-    dispatch(register(data))
-    console.log("signup form", data);
+    data.navigate = navigate;
+    dispatch(register(data));
   };
+
   return (
-    <div className="space-y-5 animate-slideUp">
-      <h1 className="text-center text-2xl font-bold gradient-text">Create Account</h1>
-      <p className="text-center text-gray-400 text-sm">Join CoinX and start trading</p>
+    <div className="space-y-6">
+      <div className="mb-8">
+        <h2 className="text-neutral-400 text-sm font-medium mb-1">Start for free</h2>
+        <h1 className="text-3xl font-bold text-white mb-2">Create Account</h1>
+        <p className="text-neutral-500 text-sm">Join CoinX and start creating</p>
+      </div>
+
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
           <FormField
@@ -53,15 +58,19 @@ const SignupForm = () => {
             name="fullName"
             render={({ field }) => (
               <FormItem>
+                <div className="text-neutral-400 text-xs mb-1 ml-1">Full Name</div>
                 <FormControl>
-                  <Input
-                    {...field}
-                    type="text"
-                    className="border w-full border-purple-500/30 py-5 px-5 bg-transparent focus:border-purple-500/60 focus:ring-2 focus:ring-purple-500/20 rounded-lg transition-all duration-300 placeholder:text-gray-500"
-                    placeholder="Enter your full name"
-                  />
+                  <div className="relative">
+                    <User className="absolute left-3 top-3.5 h-5 w-5 text-neutral-500" />
+                    <Input
+                      {...field}
+                      type="text"
+                      className="h-12 pl-10 bg-neutral-900/50 border-neutral-800 focus:border-violet-500/50 rounded-xl placeholder:text-neutral-600 text-white transition-all ring-offset-black"
+                      placeholder="Your full name"
+                    />
+                  </div>
                 </FormControl>
-                <FormMessage className="text-red-400" />
+                <FormMessage className="text-red-500 text-xs" />
               </FormItem>
             )}
           />
@@ -70,15 +79,18 @@ const SignupForm = () => {
             name="email"
             render={({ field }) => (
               <FormItem>
+                <div className="text-neutral-400 text-xs mb-1 ml-1">Email address</div>
                 <FormControl>
-                  <Input
-                    {...field}
-                    className="border w-full border-purple-500/30 py-5 px-5 bg-transparent focus:border-purple-500/60 focus:ring-2 focus:ring-purple-500/20 rounded-lg transition-all duration-300 placeholder:text-gray-500"
-                    placeholder="Enter your email"
-                  />
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3.5 h-5 w-5 text-neutral-500" />
+                    <Input
+                      {...field}
+                      className="h-12 pl-10 bg-neutral-900/50 border-neutral-800 focus:border-violet-500/50 rounded-xl placeholder:text-neutral-600 text-white transition-all ring-offset-black"
+                      placeholder="Hello@example.com"
+                    />
+                  </div>
                 </FormControl>
-
-                <FormMessage className="text-red-400" />
+                <FormMessage className="text-red-500 text-xs" />
               </FormItem>
             )}
           />
@@ -87,23 +99,48 @@ const SignupForm = () => {
             name="password"
             render={({ field }) => (
               <FormItem>
+                <div className="text-neutral-400 text-xs mb-1 ml-1">Password</div>
                 <FormControl>
-                  <Input
-                    {...field}
-                    type="password"
-                    className="border w-full border-purple-500/30 py-5 px-5 bg-transparent focus:border-purple-500/60 focus:ring-2 focus:ring-purple-500/20 rounded-lg transition-all duration-300 placeholder:text-gray-500"
-                    placeholder="Enter your password"
-                  />
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3.5 h-5 w-5 text-neutral-500" />
+                    <Input
+                      {...field}
+                      type="password"
+                      className="h-12 pl-10 bg-neutral-900/50 border-neutral-800 focus:border-violet-500/50 rounded-xl placeholder:text-neutral-600 text-white transition-all ring-offset-black"
+                      placeholder="Create a password"
+                    />
+                  </div>
                 </FormControl>
-                <FormMessage className="text-red-400" />
+                <FormMessage className="text-red-500 text-xs" />
               </FormItem>
             )}
           />
-          {!auth.loading ? <Button type="submit" className="w-full py-5 btn-gradient hover-lift hover-glow text-white font-semibold">
-            Create Account
-          </Button> : <SpinnerBackdrop show={true} />}
+
+          {!auth.loading ? (
+            <Button
+              type="submit"
+              className="w-full h-12 bg-gradient-to-r from-neutral-800 to-neutral-900 text-white hover:opacity-90 font-medium rounded-xl border border-neutral-800 shadow-lg shadow-black/50"
+            >
+              Create Account
+            </Button>
+          ) : (
+            <Button
+              disabled
+              className="w-full h-12 bg-neutral-900 text-neutral-400 font-medium rounded-xl border border-neutral-800"
+            >
+              <SpinnerBackdrop show={true} />
+              Creating account...
+            </Button>
+          )}
         </form>
       </Form>
+      <div className="flex flex-col gap-3 items-center justify-center mt-5">
+        <span>or</span>
+        <div className="w-full">
+          <LoginWithGoogle />
+        </div>
+      </div>
+
     </div>
   );
 };

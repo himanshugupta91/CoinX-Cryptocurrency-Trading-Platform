@@ -7,8 +7,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { invoices } from "../Home/AssetTable";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -16,21 +14,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getUserAssets } from "@/Redux/Assets/Action";
+import { getUserAssets } from "@/Redux/Assets/AssetSlice";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import TreadingHistory from "./TreadingHistory";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "@/context/ThemeContext";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const tab = ["portfolio", "history"];
 const Portfolio = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [currentTab, setCurrentTab] = useState("portfolio");
   const { asset } = useSelector((store) => store);
-  // const [activeTab, setActiveTab] = useState("portfolio");
+  const { theme } = useTheme();
+  const isLight = theme === "light";
 
   useEffect(() => {
     dispatch(getUserAssets(localStorage.getItem("jwt")));
@@ -40,100 +39,121 @@ const Portfolio = () => {
     setCurrentTab(value);
   };
 
-  console.log("currentTab-----", currentTab);
   return (
-    <div className="px-10 py-5 mt-10 animate-fadeIn">
-      <div className="pb-5 flex items-center gap-5">
-        <Select
-          onValueChange={handleTabChange}
-          defaultValue="portfolio"
-          className=""
-        >
-          <SelectTrigger className="w-[180px] py-[1.2rem] glass-card border-purple-500/30 hover:border-purple-500/60">
-            <SelectValue placeholder="Select Portfolio" />
+    <div className="max-w-6xl mx-auto px-4 py-8 animate-fadeIn">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className={`text-2xl font-semibold mb-2 ${isLight ? "text-gray-900" : "text-white"}`}>
+          Portfolio
+        </h1>
+        <p className={isLight ? "text-gray-500" : "text-neutral-500"}>
+          Track your cryptocurrency holdings
+        </p>
+      </div>
+
+      {/* Tab Select */}
+      <div className="mb-6">
+        <Select onValueChange={handleTabChange} defaultValue="portfolio">
+          <SelectTrigger className={`w-[160px] ${isLight
+            ? "bg-white border-gray-200 hover:border-gray-300"
+            : "bg-neutral-900 border-neutral-800 hover:border-neutral-700"
+            }`}>
+            <SelectValue placeholder="Select view" />
           </SelectTrigger>
-          <SelectContent className="glass-card border-purple-500/30">
-            <SelectItem value="portfolio" className="hover:bg-purple-500/20">Portfolio</SelectItem>
-            <SelectItem value="history" className="hover:bg-purple-500/20">History</SelectItem>
+          <SelectContent className={isLight ? "bg-white border-gray-200" : "bg-neutral-900 border-neutral-800"}>
+            <SelectItem value="portfolio" className={isLight ? "hover:bg-gray-100" : "hover:bg-neutral-800"}>
+              Portfolio
+            </SelectItem>
+            <SelectItem value="history" className={isLight ? "hover:bg-gray-100" : "hover:bg-neutral-800"}>
+              History
+            </SelectItem>
           </SelectContent>
         </Select>
-
-        {/* {tab.map((item) => (
-          <Button
-          key={item}
-            className="rounded-full"
-            size="lg"
-            onClick={() => setActiveTab(item)}
-            variant={activeTab == item ? "secondary" : "outline"}
-          >
-            {item.toUpperCase()}
-          </Button>
-        ))} */}
       </div>
-      {
-        currentTab == "portfolio" ? (
-          <Table className="px-5 relative glass-card rounded-xl border border-purple-500/30">
-            <TableHeader className="py-9">
-              <TableRow className="sticky top-0 left-0 right-0 bg-background/80 backdrop-blur-sm border-purple-500/30">
-                <TableHead className="py-3 font-semibold">Assets</TableHead>
-                <TableHead className="font-semibold">PRICE</TableHead>
-                <TableHead className="font-semibold">UNIT</TableHead>
-                <TableHead className="font-semibold">CHANGE</TableHead>
-                <TableHead className="font-semibold">CHANGE(%)</TableHead>
-                <TableHead className="text-right font-semibold">VALUE</TableHead>
+
+      {/* Content */}
+      {currentTab === "portfolio" ? (
+        <div className="card overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow className={`hover:bg-transparent ${isLight ? "border-gray-200" : "border-neutral-800"}`}>
+                <TableHead className={isLight ? "text-gray-500 font-medium" : "text-neutral-500 font-medium"}>Asset</TableHead>
+                <TableHead className={isLight ? "text-gray-500 font-medium" : "text-neutral-500 font-medium"}>Price</TableHead>
+                <TableHead className={isLight ? "text-gray-500 font-medium" : "text-neutral-500 font-medium"}>Holdings</TableHead>
+                <TableHead className={isLight ? "text-gray-500 font-medium" : "text-neutral-500 font-medium"}>24h Change</TableHead>
+                <TableHead className={`text-right ${isLight ? "text-gray-500 font-medium" : "text-neutral-500 font-medium"}`}>Value</TableHead>
               </TableRow>
             </TableHeader>
-
-            <TableBody className="">
-              {asset.userAssets?.map((item, index) => (
-                <TableRow
-                  onClick={() => navigate(`/market/${item.coin.id}`)}
-                  key={item.id}
-                  className="hover:bg-purple-500/10 cursor-pointer transition-colors border-purple-500/20 animate-slideUp"
-                  style={{ animationDelay: `${index * 30}ms` }}
-                >
-                  <TableCell className="font-medium flex items-center gap-2">
-                    <Avatar className="-z-50 ring-2 ring-purple-500/50">
-                      <AvatarImage
-                        src={item.coin.image}
-                        alt={item.coin.symbol}
-                      />
-                    </Avatar>
-                    <span className="font-semibold"> {item.coin.name}</span>
-                  </TableCell>
-                  <TableCell className="font-semibold">${item.coin.current_price}</TableCell>
-                  <TableCell className="font-semibold">{item.quantity}</TableCell>
-                  <TableCell
-                    className={`font-semibold ${item.coin.price_change_percentage_24h < 0
-                      ? "text-red-400"
-                      : "text-green-400"
+            <TableBody>
+              {asset.loading ? (
+                [1, 2, 3, 4, 5].map((item) => (
+                  <TableRow key={item} className={`${isLight ? "border-gray-200" : "border-neutral-800"}`}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-8 w-8 rounded-full" />
+                        <div className="space-y-1">
+                          <Skeleton className="h-4 w-24" />
+                          <Skeleton className="h-3 w-12" />
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                    <TableCell className="text-right"><Skeleton className="h-4 w-20 ml-auto" /></TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                asset.userAssets?.map((item) => (
+                  <TableRow
+                    onClick={() => navigate(`/market/${item.coin.id}`)}
+                    key={item.id}
+                    className={`cursor-pointer transition-all duration-200 ${isLight
+                      ? "border-gray-200 hover:bg-gray-100 hover:scale-[1.01] hover:shadow-sm"
+                      : "border-neutral-800 hover:bg-neutral-800 hover:scale-[1.01] hover:shadow-md bg-transparent"
                       }`}
                   >
-                    {item.coin.price_change_24h}
-                  </TableCell>
-                  <TableCell
-                    className={`font-semibold ${item.coin.price_change_percentage_24h < 0
-                      ? "text-red-400"
-                      : "text-green-400"
-                      }`}
-                  >
-                    {item.coin.price_change_percentage_24h}%
-                  </TableCell>
-
-                  <TableCell className="text-right font-semibold">
-                    ${(item.coin.current_price * item.quantity).toFixed(2)}
-                  </TableCell>
-                </TableRow>
-              ))}
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={item.coin.image} alt={item.coin.symbol} />
+                        </Avatar>
+                        <div>
+                          <p className={`font-medium ${isLight ? "text-gray-900" : "text-white"}`}>{item.coin.name}</p>
+                          <p className={`text-xs uppercase ${isLight ? "text-gray-500" : "text-neutral-500"}`}>{item.coin.symbol}</p>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className={`font-medium ${isLight ? "text-gray-900" : "text-white"}`}>
+                      ${item.coin.current_price?.toLocaleString()}
+                    </TableCell>
+                    <TableCell className={isLight ? "text-gray-700" : "text-neutral-300"}>
+                      {item.quantity} {item.coin.symbol?.toUpperCase()}
+                    </TableCell>
+                    <TableCell>
+                      <span className={item.coin.price_change_percentage_24h < 0 ? "text-red-500" : "text-green-500"}>
+                        {item.coin.price_change_percentage_24h > 0 ? "+" : ""}
+                        {item.coin.price_change_percentage_24h?.toFixed(2)}%
+                      </span>
+                    </TableCell>
+                    <TableCell className={`text-right font-medium ${isLight ? "text-gray-900" : "text-white"}`}>
+                      ${(item.coin.current_price * item.quantity).toFixed(2)}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
-        ) : (
-          <TreadingHistory />
-        )
-        // <div className="flex items-center justify-center h-[70vh]">
-        //   <h1 className="text-3xl font-semibold">No History Available</h1>
-        //   </div>
-      }
+
+          {(!asset.userAssets || asset.userAssets.length === 0) && (
+            <div className="py-16 text-center">
+              <p className={isLight ? "text-gray-500" : "text-neutral-500"}>No assets in your portfolio yet</p>
+            </div>
+          )}
+        </div>
+      ) : (
+        <TreadingHistory />
+      )}
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import { transferMoney } from "@/Redux/Wallet/Action";
+import { transferMoney } from "@/Redux/Wallet/WalletSlice";
 import { Button } from "@/components/ui/button";
 import { DialogClose } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -18,7 +18,6 @@ const TransferForm = () => {
       ...formData,
       [e.target.name]: e.target.value,
     });
-    // setAmount(e.target.value);
   };
 
   const handleSubmit = () => {
@@ -32,47 +31,49 @@ const TransferForm = () => {
         },
       })
     );
-    console.log(formData);
   };
+
   return (
-    <div className="pt-10 space-y-5">
+    <div className="pt-6 space-y-4">
       <div>
-        <h1 className="pb-1">Enter Amount</h1>
+        <label className="text-sm text-neutral-400 mb-2 block">Amount</label>
         <Input
           name="amount"
           onChange={handleChange}
           value={formData.amount}
-          className="py-7"
-          placeholder="$9999"
+          className="h-12 bg-neutral-800 border-neutral-700 focus:border-neutral-600 rounded-lg placeholder:text-neutral-500"
+          placeholder="Enter amount"
+          type="number"
         />
       </div>
+
       <div>
-        <h1 className="pb-1">Enter Wallet Id</h1>
+        <label className="text-sm text-neutral-400 mb-2 block">Wallet ID</label>
         <Input
           name="walletId"
           onChange={handleChange}
           value={formData.walletId}
-          className="py-7"
-          placeholder="#ADFE34456"
+          className="h-12 bg-neutral-800 border-neutral-700 focus:border-neutral-600 rounded-lg placeholder:text-neutral-500"
+          placeholder="Enter recipient wallet ID"
         />
       </div>
 
       <div>
-        <h1 className="pb-1">Purpose</h1>
+        <label className="text-sm text-neutral-400 mb-2 block">Purpose</label>
         <Input
           name="purpose"
           onChange={handleChange}
           value={formData.purpose}
-          className="py-7"
-          placeholder="gift for your friend..."
+          className="h-12 bg-neutral-800 border-neutral-700 focus:border-neutral-600 rounded-lg placeholder:text-neutral-500"
+          placeholder="Optional note"
         />
       </div>
 
-      <DialogClose>
+      <DialogClose className="w-full">
         <Button
           onClick={handleSubmit}
-          variant=""
-          className="w-full p-7 text-xl"
+          disabled={!formData.amount || !formData.walletId}
+          className="w-full h-12 bg-white text-black hover:bg-neutral-200 font-medium rounded-lg disabled:opacity-50"
         >
           Send
         </Button>
