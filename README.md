@@ -178,20 +178,4 @@ npm install && npm run dev                  # Runs at http://localhost:5173
 
 ---
 
-## Contributing
-
-1. **Fork** the repo
-2. Create a branch — `git checkout -b feature/something`
-3. Commit — `git commit -m 'add something'`
-4. Push — `git push origin feature/something`
-5. Open a **Pull Request**
-
----
-
-## License
-
-MIT License. See [LICENSE](LICENSE) file for details.
-
----
-
 Built with care by [Himanshu](https://github.com/himanshugupta91)
